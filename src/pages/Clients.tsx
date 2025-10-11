@@ -512,7 +512,7 @@ export default function Clients() {
               <Input label="End Date" type="date" value={creditFilters.endDate} onChange={e => setCreditFilters({...creditFilters, endDate: e.target.value})} />
             </div>
             <div className="mt-4 flex gap-2">
-              <Button onClick={loadCredits} variant="outline">Apply Filters</Button>
+              <Button onClick={loadCredits} variant="secondary">Apply Filters</Button>
               <Button onClick={resetFilters} variant="ghost">Reset Filters</Button>
             </div>
           </div>
