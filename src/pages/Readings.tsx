@@ -141,7 +141,7 @@ export default function Readings() {
       // Add current prices to each reading
       const readingsWithPrices = readingsToSave.map(reading => {
         const pump = tanks.find(t => t.id === reading.pumpId);
-        const pricePerLitre = pump ? currentPrices[pump.fuelType.id] || 0 : 0;
+        const pricePerLitre = pump ? currentPrices[(pump.fuelType as any).id] || 0 : 0;
         return { ...reading, pricePerLitre };
       });
 
@@ -318,7 +318,7 @@ export default function Readings() {
                               <div className="flex flex-col">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Current Price/Litre</label>
                                 <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-600">
-                                  ₹{currentPrices[pump.fuelType.id]?.toFixed(2) || 'N/A'}
+                                  ₹{currentPrices[(pump.fuelType as any).id]?.toFixed(2) || 'N/A'}
                                 </div>
                               </div>
                               <div className="flex flex-col">

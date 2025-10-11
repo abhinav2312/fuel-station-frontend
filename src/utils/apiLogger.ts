@@ -11,7 +11,7 @@ const requestSizes = new Map<string, number>();
 
 // Request interceptor
 axios.interceptors.request.use(
-    (config: AxiosRequestConfig) => {
+    (config: any) => {
         const requestId = `${config.method?.toUpperCase()}_${config.url}_${Date.now()}`;
         const startTime = Date.now();
 

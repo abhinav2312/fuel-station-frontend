@@ -170,7 +170,7 @@ class Logger {
         }
 
         // Send to backend in production
-        if (process.env.NODE_ENV === 'production') {
+        if ((window as any).process?.env?.NODE_ENV === 'production') {
             this.sendToBackend(entry);
         }
     }
