@@ -40,7 +40,7 @@ export default function Settings() {
 
   async function loadTanks() {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/tanks`);
+      const response = await axios.get('/api/tanks');
       setTanks(response.data);
     } catch (error) {
       console.error('Error loading tanks:', error);
@@ -85,7 +85,7 @@ export default function Settings() {
         return;
       }
 
-      const response = await axios.put(`${API_BASE_URL}/api/tanks/${tankId}`, updateData, {
+      const response = await axios.put(`/api/tanks/${tankId}`, updateData, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -118,12 +118,12 @@ export default function Settings() {
       
       // Fetch all data
       const [sales, clients, purchases, credits, tanks, prices] = await Promise.all([
-        axios.get(`${API_BASE_URL}/api/sales`),
-        axios.get(`${API_BASE_URL}/api/clients`),
-        axios.get(`${API_BASE_URL}/api/purchases`),
-        axios.get(`${API_BASE_URL}/api/credits`),
-        axios.get(`${API_BASE_URL}/api/tanks`),
-        axios.get(`${API_BASE_URL}/api/prices`)
+        axios.get('/api/sales'),
+        axios.get('/api/clients'),
+        axios.get('/api/purchases'),
+        axios.get('/api/credits'),
+        axios.get('/api/tanks'),
+        axios.get('/api/prices')
       ]);
 
       const exportData = {
@@ -167,10 +167,10 @@ export default function Settings() {
       setMessage('Preparing CSV export...');
       
       const [sales, clients, purchases, credits] = await Promise.all([
-        axios.get(`${API_BASE_URL}/api/sales`),
-        axios.get(`${API_BASE_URL}/api/clients`),
-        axios.get(`${API_BASE_URL}/api/purchases`),
-        axios.get(`${API_BASE_URL}/api/credits`)
+        axios.get('/api/sales'),
+        axios.get('/api/clients'),
+        axios.get('/api/purchases'),
+        axios.get('/api/credits')
       ]);
 
       // Convert to CSV format

@@ -4,6 +4,9 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import './styles.css';
 import './styles/premium.css';
 
+// Initialize API configuration first
+import './utils/api';
+
 // Initialize logging system
 import './utils/apiLogger';
 import { logger } from './utils/logger';
