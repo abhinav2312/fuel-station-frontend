@@ -128,7 +128,7 @@ export default function Clients() {
     const owner = sameAsName ? name : ownerName;
     if (!owner) return;
     
-    await axios.post('/api/clients', { name, ownerName: owner, phone, address });
+    await apiClient.post('/api/clients', { name, ownerName: owner, phone, address });
     await loadClients();
     resetForms();
   }
@@ -163,7 +163,7 @@ export default function Clients() {
         note 
       });
       
-      await axios.post(`/api/clients/${selectedClient}/credit`, { 
+      await apiClient.post(`/api/clients/${selectedClient}/credit`, { 
         fuelTypeId, 
         litres: finalLitres, 
         pricePerLitre, 
@@ -184,7 +184,7 @@ export default function Clients() {
   }
 
   async function markAsPaid(creditId: number) {
-    await axios.put(`/api/credits/${creditId}/mark-paid`);
+    await apiClient.put(`/api/credits/${creditId}/mark-paid`);
     await loadCredits();
   }
 
@@ -214,7 +214,7 @@ export default function Clients() {
     const owner = sameAsName ? name : ownerName;
     if (!owner) return;
     
-    await axios.put(`/api/clients/${editingClient.id}`, { 
+    await apiClient.put(`/api/clients/${editingClient.id}`, { 
       name, 
       ownerName: owner, 
       phone, 
