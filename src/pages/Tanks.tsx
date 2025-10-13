@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { apiClient } from '../utils/api';
 import { logger } from '../utils/logger';
 
 type FuelType = {
@@ -31,7 +31,7 @@ export default function Tanks() {
 
   async function loadTanks() {
     try {
-      const response = await axios.get('/api/tanks');
+      const response = await apiClient.get('/api/tanks');
       setTanks(response.data);
       logger.info('Tanks loaded', { count: response.data.length });
     } catch (error) {

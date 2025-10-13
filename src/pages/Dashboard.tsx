@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { apiClient } from '../utils/api';
 
 type DashboardData = {
   todaySales: number;
@@ -44,10 +44,10 @@ export default function Dashboard() {
     try {
       setLoading(true);
       const [salesResponse, clientsResponse, creditsResponse, tanksResponse] = await Promise.all([
-        axios.get(`/api/reports/summary?period=${dateRange}`),
-        axios.get('/api/clients'),
-        axios.get('/api/credits'),
-        axios.get('/api/tanks')
+        apiClient.get(`/api/reports/summary?period=${dateRange}`),
+        apiClient.get('/api/clients'),
+        apiClient.get('/api/credits'),
+        apiClient.get('/api/tanks')
       ]);
 
       const sales = salesResponse.data;

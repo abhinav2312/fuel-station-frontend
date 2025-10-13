@@ -7,4 +7,10 @@ import axios from 'axios';
 // Set the base URL for all axios requests
 axios.defaults.baseURL = API_BASE_URL;
 
+// Also create an axios instance with the base URL
+const apiClient = axios.create({
+    baseURL: API_BASE_URL
+});
+
 export default API_BASE_URL;
+export { apiClient };

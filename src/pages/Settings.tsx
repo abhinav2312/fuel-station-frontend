@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { apiClient } from '../utils/api';
 import { Card } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import LogViewer from '../components/LogViewer';
-import API_BASE_URL from '../utils/api';
 
 type Tank = {
   id: number;
@@ -40,7 +39,7 @@ export default function Settings() {
 
   async function loadTanks() {
     try {
-      const response = await axios.get('/api/tanks');
+      const response = await apiClient.get('/api/tanks');
       setTanks(response.data);
     } catch (error) {
       console.error('Error loading tanks:', error);
@@ -85,7 +84,7 @@ export default function Settings() {
         return;
       }
 
-      const response = await axios.put(`/api/tanks/${tankId}`, updateData, {
+      const response = await apiClient.put(`/api/tanks/${tankId}`, updateData, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -118,12 +117,12 @@ export default function Settings() {
       
       // Fetch all data
       const [sales, clients, purchases, credits, tanks, prices] = await Promise.all([
-        axios.get('/api/sales'),
-        axios.get('/api/clients'),
-        axios.get('/api/purchases'),
-        axios.get('/api/credits'),
-        axios.get('/api/tanks'),
-        axios.get('/api/prices')
+        apiClient.get('/api/sales'),
+        apiClient.get('/api/clients'),
+        apiClient.get('/api/purchases'),
+        apiClient.get('/api/credits'),
+        apiClient.get('/api/tanks'),
+        apiClient.get('/api/prices')
       ]);
 
       const exportData = {
@@ -167,10 +166,10 @@ export default function Settings() {
       setMessage('Preparing CSV export...');
       
       const [sales, clients, purchases, credits] = await Promise.all([
-        axios.get('/api/sales'),
-        axios.get('/api/clients'),
-        axios.get('/api/purchases'),
-        axios.get('/api/credits')
+        apiClient.get('/api/sales'),
+        apiClient.get('/api/clients'),
+        apiClient.get('/api/purchases'),
+        apiClient.get('/api/credits')
       ]);
 
       // Convert to CSV format
