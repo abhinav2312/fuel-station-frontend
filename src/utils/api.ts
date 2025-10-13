@@ -1,5 +1,21 @@
-// API configuration for production
-const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'https://fuel-station-backend.onrender.com';
+// Simple environment-based API configuration
+const getApiBaseUrl = () => {
+    // Check for explicit API URL first (highest priority)
+    if ((import.meta as any).env?.VITE_API_URL) {
+        return (import.meta as any).env.VITE_API_URL;
+    }
+
+    // Check for environment variable - this is your main control
+    const environment = (import.meta as any).env?.VITE_ENVIRONMENT || 'production';
+
+    if (environment === 'local') {
+        return 'http://localhost:4000';
+    } else {
+        return 'https://fuel-station-backend.onrender.com';
+    }
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 // Configure axios to use the correct base URL
 import axios from 'axios';
