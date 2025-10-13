@@ -84,14 +84,14 @@ export default function LogViewer({ isOpen, onClose }: LogViewerProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl h-full max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-2 sm:p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl h-full max-h-[95vh] sm:max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <div className="flex items-center space-x-4">
-            <h2 className="text-xl font-bold">System Logs</h2>
-            <div className="flex items-center space-x-2">
-              <label className="flex items-center">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 border-b space-y-2 sm:space-y-0">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+            <h2 className="text-lg sm:text-xl font-bold">System Logs</h2>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-1 sm:space-y-0 sm:space-x-2">
+              <label className="flex items-center text-sm">
                 <input
                   type="checkbox"
                   checked={autoRefresh}
@@ -100,127 +100,129 @@ export default function LogViewer({ isOpen, onClose }: LogViewerProps) {
                 />
                 Auto Refresh
               </label>
-              <span className="text-sm text-gray-500">
+              <span className="text-xs sm:text-sm text-gray-500">
                 {logs.length} logs
               </span>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-wrap items-center gap-1 sm:gap-2">
             <button
               onClick={() => exportLogs('json')}
-              className="px-3 py-1 bg-blue-500 text-white rounded text-sm"
+              className="px-2 py-1 bg-blue-500 text-white rounded text-xs sm:text-sm"
             >
-              Export JSON
+              JSON
             </button>
             <button
               onClick={() => exportLogs('csv')}
-              className="px-3 py-1 bg-green-500 text-white rounded text-sm"
+              className="px-2 py-1 bg-green-500 text-white rounded text-xs sm:text-sm"
             >
-              Export CSV
+              CSV
             </button>
             <button
               onClick={() => logger.clearLogs()}
-              className="px-3 py-1 bg-red-500 text-white rounded text-sm"
+              className="px-2 py-1 bg-red-500 text-white rounded text-xs sm:text-sm"
             >
-              Clear Logs
+              Clear
             </button>
             <button
               onClick={onClose}
-              className="px-3 py-1 bg-gray-500 text-white rounded text-sm"
+              className="px-2 py-1 bg-gray-500 text-white rounded text-xs sm:text-sm"
             >
               Close
             </button>
           </div>
         </div>
 
-        <div className="flex flex-1 overflow-hidden">
-          {/* Filters */}
-          <div className="w-64 border-r p-4 space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Log Level</label>
-              <select
-                value={filter.level}
-                onChange={(e) => setFilter({ ...filter, level: Number(e.target.value) })}
-                className="w-full p-2 border rounded"
-              >
-                <option value={LogLevel.DEBUG}>Debug</option>
-                <option value={LogLevel.INFO}>Info</option>
-                <option value={LogLevel.WARN}>Warn</option>
-                <option value={LogLevel.ERROR}>Error</option>
-                <option value={LogLevel.CRITICAL}>Critical</option>
-              </select>
-            </div>
+        <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
+          {/* Filters - Mobile: Collapsible, Desktop: Sidebar */}
+          <div className="w-full lg:w-64 border-b lg:border-r p-3 sm:p-4 space-y-3 sm:space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3 sm:gap-4">
+              <div>
+                <label className="block text-xs sm:text-sm font-medium mb-1 sm:mb-2">Log Level</label>
+                <select
+                  value={filter.level}
+                  onChange={(e) => setFilter({ ...filter, level: Number(e.target.value) })}
+                  className="w-full p-2 text-sm border rounded"
+                >
+                  <option value={LogLevel.DEBUG}>Debug</option>
+                  <option value={LogLevel.INFO}>Info</option>
+                  <option value={LogLevel.WARN}>Warn</option>
+                  <option value={LogLevel.ERROR}>Error</option>
+                  <option value={LogLevel.CRITICAL}>Critical</option>
+                </select>
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">Category</label>
-              <select
-                value={filter.category}
-                onChange={(e) => setFilter({ ...filter, category: e.target.value as LogCategory | '' })}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">All Categories</option>
-                {Object.values(LogCategory).map(category => (
-                  <option key={category} value={category}>{category}</option>
-                ))}
-              </select>
-            </div>
+              <div>
+                <label className="block text-xs sm:text-sm font-medium mb-1 sm:mb-2">Category</label>
+                <select
+                  value={filter.category}
+                  onChange={(e) => setFilter({ ...filter, category: e.target.value as LogCategory | '' })}
+                  className="w-full p-2 text-sm border rounded"
+                >
+                  <option value="">All Categories</option>
+                  {Object.values(LogCategory).map(category => (
+                    <option key={category} value={category}>{category}</option>
+                  ))}
+                </select>
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">Page</label>
-              <input
-                type="text"
-                value={filter.page}
-                onChange={(e) => setFilter({ ...filter, page: e.target.value })}
-                placeholder="Filter by page"
-                className="w-full p-2 border rounded"
-              />
-            </div>
+              <div>
+                <label className="block text-xs sm:text-sm font-medium mb-1 sm:mb-2">Page</label>
+                <input
+                  type="text"
+                  value={filter.page}
+                  onChange={(e) => setFilter({ ...filter, page: e.target.value })}
+                  placeholder="Filter by page"
+                  className="w-full p-2 text-sm border rounded"
+                />
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">Search</label>
-              <input
-                type="text"
-                value={filter.search}
-                onChange={(e) => setFilter({ ...filter, search: e.target.value })}
-                placeholder="Search logs..."
-                className="w-full p-2 border rounded"
-              />
+              <div>
+                <label className="block text-xs sm:text-sm font-medium mb-1 sm:mb-2">Search</label>
+                <input
+                  type="text"
+                  value={filter.search}
+                  onChange={(e) => setFilter({ ...filter, search: e.target.value })}
+                  placeholder="Search logs..."
+                  className="w-full p-2 text-sm border rounded"
+                />
+              </div>
             </div>
 
             <button
               onClick={loadLogs}
-              className="w-full px-3 py-2 bg-blue-500 text-white rounded"
+              className="w-full px-3 py-2 bg-blue-500 text-white rounded text-sm"
             >
               Apply Filters
             </button>
           </div>
 
           {/* Logs List */}
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col min-h-0">
             <div className="flex-1 overflow-y-auto">
               {logs.map((log) => (
                 <div
                   key={log.id}
-                  className={`p-3 border-b cursor-pointer hover:bg-gray-50 ${
+                  className={`p-2 sm:p-3 border-b cursor-pointer hover:bg-gray-50 ${
                     selectedLog?.id === log.id ? 'bg-blue-50' : ''
                   }`}
                   onClick={() => setSelectedLog(log)}
                 >
-                  <div className="flex items-center space-x-3">
-                    <span className="text-lg">{getLevelIcon(log.level)}</span>
+                  <div className="flex items-start space-x-2 sm:space-x-3">
+                    <span className="text-base sm:text-lg flex-shrink-0">{getLevelIcon(log.level)}</span>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2">
-                        <span className={`font-medium ${getLevelColor(log.level)}`}>
+                      <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2">
+                        <span className={`font-medium text-sm ${getLevelColor(log.level)}`}>
                           {LogLevel[log.level]}
                         </span>
-                        <span className="text-sm text-gray-500">
+                        <span className="text-xs sm:text-sm text-gray-500">
                           [{LogCategory[log.category]}]
                         </span>
-                        <span className="text-sm text-gray-500">
+                        <span className="text-xs sm:text-sm text-gray-500 truncate">
                           {log.page}
                         </span>
                       </div>
-                      <div className="text-sm text-gray-700 truncate">
+                      <div className="text-xs sm:text-sm text-gray-700 break-words">
                         {log.message}
                       </div>
                       <div className="text-xs text-gray-500">
@@ -234,20 +236,20 @@ export default function LogViewer({ isOpen, onClose }: LogViewerProps) {
 
             {/* Log Details */}
             {selectedLog && (
-              <div className="border-t p-4 bg-gray-50 max-h-64 overflow-y-auto">
-                <h3 className="font-bold mb-2">Log Details</h3>
-                <div className="space-y-2 text-sm">
-                  <div><strong>ID:</strong> {selectedLog.id}</div>
-                  <div><strong>Timestamp:</strong> {selectedLog.timestamp}</div>
+              <div className="border-t p-2 sm:p-4 bg-gray-50 max-h-48 sm:max-h-64 overflow-y-auto">
+                <h3 className="font-bold mb-2 text-sm sm:text-base">Log Details</h3>
+                <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
+                  <div className="break-all"><strong>ID:</strong> {selectedLog.id}</div>
+                  <div className="break-all"><strong>Timestamp:</strong> {selectedLog.timestamp}</div>
                   <div><strong>Level:</strong> {LogLevel[selectedLog.level]}</div>
                   <div><strong>Category:</strong> {LogCategory[selectedLog.category]}</div>
-                  <div><strong>Page:</strong> {selectedLog.page}</div>
-                  <div><strong>Session:</strong> {selectedLog.sessionId}</div>
-                  <div><strong>Message:</strong> {selectedLog.message}</div>
+                  <div className="break-all"><strong>Page:</strong> {selectedLog.page}</div>
+                  <div className="break-all"><strong>Session:</strong> {selectedLog.sessionId}</div>
+                  <div className="break-words"><strong>Message:</strong> {selectedLog.message}</div>
                   {selectedLog.data && (
                     <div>
                       <strong>Data:</strong>
-                      <pre className="mt-1 p-2 bg-white border rounded text-xs overflow-x-auto">
+                      <pre className="mt-1 p-2 bg-white border rounded text-xs overflow-x-auto whitespace-pre-wrap break-words">
                         {JSON.stringify(selectedLog.data, null, 2)}
                       </pre>
                     </div>
@@ -255,7 +257,7 @@ export default function LogViewer({ isOpen, onClose }: LogViewerProps) {
                   {selectedLog.error && (
                     <div>
                       <strong>Error:</strong>
-                      <pre className="mt-1 p-2 bg-white border rounded text-xs overflow-x-auto">
+                      <pre className="mt-1 p-2 bg-white border rounded text-xs overflow-x-auto whitespace-pre-wrap break-words">
                         {JSON.stringify(selectedLog.error, null, 2)}
                       </pre>
                     </div>
@@ -263,7 +265,7 @@ export default function LogViewer({ isOpen, onClose }: LogViewerProps) {
                   {selectedLog.apiCall && (
                     <div>
                       <strong>API Call:</strong>
-                      <pre className="mt-1 p-2 bg-white border rounded text-xs overflow-x-auto">
+                      <pre className="mt-1 p-2 bg-white border rounded text-xs overflow-x-auto whitespace-pre-wrap break-words">
                         {JSON.stringify(selectedLog.apiCall, null, 2)}
                       </pre>
                     </div>

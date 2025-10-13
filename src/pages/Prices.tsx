@@ -42,8 +42,8 @@ export default function Prices() {
       fuelTypesRes.data.forEach((tank: any) => {
         if (tank.fuelType) {
           const key = tank.fuelType.name.toLowerCase().replace(/\s+/g, '');
-          uniqueFuelTypes.set(tank.fuelTypeId, {
-            id: tank.fuelTypeId,
+          uniqueFuelTypes.set(tank.fuelType.id, {
+            id: tank.fuelType.id,
             name: tank.fuelType.name,
             price: currentRes.data[key] || null
           });
@@ -130,60 +130,60 @@ export default function Prices() {
 
       {activeTab === 'set' && (
         <>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {fuelTypes.map((fuelType, index) => {
               const key = fuelType.name.toLowerCase().replace(/\s+/g, '');
               const colors = [
-                { bg: 'bg-blue-100', text: 'text-blue-600' },
-                { bg: 'bg-emerald-100', text: 'text-emerald-600' },
-                { bg: 'bg-slate-100', text: 'text-slate-600' },
-                { bg: 'bg-amber-100', text: 'text-amber-600' },
-                { bg: 'bg-purple-100', text: 'text-purple-600' },
-                { bg: 'bg-pink-100', text: 'text-pink-600' }
+                { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', icon: 'text-blue-600' },
+                { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', icon: 'text-emerald-600' },
+                { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', icon: 'text-amber-600' }
               ];
               const color = colors[index % colors.length];
               
               return (
-                <div key={fuelType.id} className="metric-card">
+                <div key={fuelType.id} className={`${color.bg} ${color.border} border rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200`}>
                   <div className="flex items-center">
-                    <div className={`p-3 ${color.bg} rounded-lg`}>
-                      <svg className={`w-6 h-6 ${color.text}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className={`p-3 ${color.bg} rounded-lg border ${color.border}`}>
+                      <svg className={`w-6 h-6 ${color.icon}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                       </svg>
                     </div>
-                    <div className="ml-4">
-                      <p className="metric-label">{fuelType.name}</p>
-                      <p className="metric-value">₹{current[key]?.toFixed(2) ?? 'N/A'}</p>
+                    <div className="ml-4 flex-1">
+                      <p className="text-sm font-medium text-slate-600 mb-1">{fuelType.name}</p>
+                      <p className={`text-2xl font-bold ${color.text}`}>₹{current[key]?.toFixed(2) ?? 'N/A'}</p>
                     </div>
                   </div>
                 </div>
               );
             })}
-            <div className="metric-card">
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 shadow-sm">
               <div className="flex items-center">
-                <div className="p-3 bg-amber-100 rounded-lg">
-                  <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="p-3 bg-slate-100 rounded-lg border border-slate-200">
+                  <svg className="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <div className="ml-4">
-                  <p className="metric-label">Last Updated</p>
-                  <p className="text-sm text-slate-600">{current.updatedAt ? new Date(current.updatedAt).toLocaleDateString() : 'Never'}</p>
+                <div className="ml-4 flex-1">
+                  <p className="text-sm font-medium text-slate-600 mb-1">Last Updated</p>
+                  <p className="text-sm text-slate-500">{current.updatedAt ? new Date(current.updatedAt).toLocaleDateString() : 'Never'}</p>
                 </div>
               </div>
             </div>
           </div>
-          <div className="card max-w-2xl">
-            <div className="card-header">
-              <h2 className="text-lg font-semibold text-slate-900">Set New Prices</h2>
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm max-w-4xl">
+            <div className="px-6 py-5 border-b border-slate-200">
+              <h2 className="text-xl font-semibold text-slate-900">Set New Prices</h2>
+              <p className="text-sm text-slate-600 mt-1">Update fuel prices for your station</p>
             </div>
-            <div className="card-body">
-              <div className="grid md:grid-cols-3 gap-6">
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 {fuelTypes.map(fuelType => {
                   const key = fuelType.name.toLowerCase().replace(/\s+/g, '');
                   return (
-                    <div key={fuelType.id} className="form-group">
-                      <label className="form-label">{fuelType.name} Price (₹/L)</label>
+                    <div key={fuelType.id} className="space-y-2">
+                      <label className="block text-sm font-medium text-slate-700">
+                        {fuelType.name} Price (₹/L)
+                      </label>
                       <input
                         type="number"
                         step="0.01"
@@ -192,35 +192,37 @@ export default function Prices() {
                           ...prev,
                           [key]: e.target.value === '' ? undefined : Number(e.target.value)
                         }))}
-                        className="input-field"
+                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                         placeholder={`Enter ${fuelType.name.toLowerCase()} price`}
                       />
                     </div>
                   );
                 })}
               </div>
-              <div className="form-group">
-                <label className="form-label">Effective Date</label>
+              <div className="space-y-2 mb-6">
+                <label className="block text-sm font-medium text-slate-700">Effective Date</label>
                 <input
                   type="date"
                   value={date}
                   onChange={e => setDate(e.target.value)}
-                  className="input-field"
+                  className="w-full max-w-xs px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                 />
               </div>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={saveAll}
                   disabled={!allFilled}
-                  className={`btn-primary flex-1 ${
-                    !allFilled ? 'opacity-50 cursor-not-allowed' : ''
+                  className={`flex-1 px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
+                    !allFilled 
+                      ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
+                      : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow-md'
                   }`}
                 >
                   Update Prices
                 </button>
                 <button
                   onClick={() => setPrices({})}
-                  className="btn-ghost"
+                  className="px-6 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors duration-200"
                 >
                   Clear
                 </button>
@@ -231,13 +233,20 @@ export default function Prices() {
       )}
 
       {activeTab === 'history' && (
-        <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Price History</h2>
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-5 border-b border-slate-200 bg-slate-50">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-semibold text-slate-900">Price History</h2>
+                <p className="text-sm text-slate-600 mt-1">Track historical price changes</p>
+              </div>
               <div className="flex items-center gap-3">
-                <label className="text-sm">Rows per page</label>
-                <select className="border rounded p-2" value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }}>
+                <label className="text-sm font-medium text-slate-700">Rows per page</label>
+                <select 
+                  className="px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200" 
+                  value={pageSize} 
+                  onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }}
+                >
                   <option value={10}>10</option>
                   <option value={25}>25</option>
                   <option value={50}>50</option>
@@ -247,26 +256,28 @@ export default function Prices() {
             </div>
           </div>
           <div className="overflow-x-auto">
-            <table className="min-w-[600px]">
-              <thead className="bg-gray-50">
+            <table className="w-full">
+              <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Date</th>
                   {fuelTypes.map(fuelType => (
-                    <th key={fuelType.id} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th key={fuelType.id} className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       {fuelType.name}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white divide-y divide-slate-200">
                 {paginate(rows, page, pageSize).map((r, idx) => (
-                  <tr key={idx} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(r.date).toLocaleString()}</td>
+                  <tr key={`row-${r.date}-${idx}`} className="hover:bg-slate-50 transition-colors duration-150">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                      {new Date(r.date).toLocaleString()}
+                    </td>
                     {fuelTypes.map(fuelType => {
                       const key = fuelType.name.toLowerCase().replace(/\s+/g, '');
                       const value = r[key];
                       return (
-                        <td key={fuelType.id} className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td key={fuelType.id} className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
                           {value !== undefined && value !== null ? `₹${Number(value).toFixed(2)}` : '-'}
                         </td>
                       );
@@ -276,11 +287,25 @@ export default function Prices() {
               </tbody>
             </table>
           </div>
-          <div className="flex items-center justify-between px-6 py-3 border-t text-sm">
-            <div>Page {page} of {Math.max(1, Math.ceil(rows.length / pageSize))}</div>
+          <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-t border-slate-200 bg-slate-50">
+            <div className="text-sm text-slate-600 mb-2 sm:mb-0">
+              Page {page} of {Math.max(1, Math.ceil(rows.length / pageSize))}
+            </div>
             <div className="flex gap-2">
-              <button className="px-3 py-1 border rounded-lg hover:bg-gray-50" disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Prev</button>
-              <button className="px-3 py-1 border rounded-lg hover:bg-gray-50" disabled={page >= Math.ceil(rows.length / pageSize)} onClick={() => setPage(p => Math.min(Math.ceil(rows.length / pageSize), p + 1))}>Next</button>
+              <button 
+                className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-white hover:border-slate-400 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed" 
+                disabled={page === 1} 
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+              >
+                Previous
+              </button>
+              <button 
+                className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-white hover:border-slate-400 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed" 
+                disabled={page >= Math.ceil(rows.length / pageSize)} 
+                onClick={() => setPage(p => Math.min(Math.ceil(rows.length / pageSize), p + 1))}
+              >
+                Next
+              </button>
             </div>
           </div>
         </div>

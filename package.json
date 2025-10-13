@@ -5,10 +5,10 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "dev:local": "vite --mode local",
+        "dev:development": "vite --mode development",
         "dev:production": "vite --mode production",
         "build": "tsc && vite build",
-        "build:local": "tsc && vite build --mode local",
+        "build:development": "tsc && vite build --mode development",
         "build:production": "tsc && vite build --mode production",
         "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "preview": "vite preview"

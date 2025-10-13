@@ -5,10 +5,10 @@ const getApiBaseUrl = () => {
         return (import.meta as any).env.VITE_API_URL;
     }
 
-    // Check for environment variable - this is your main control
-    const environment = (import.meta as any).env?.VITE_ENVIRONMENT || 'production';
+    // Check for Vite's MODE first, then fallback to VITE_ENVIRONMENT
+    const environment = (import.meta as any).env?.MODE || (import.meta as any).env?.VITE_ENVIRONMENT || 'production';
 
-    if (environment === 'local') {
+    if (environment === 'development') {
         return 'http://localhost:4000';
     } else {
         return 'https://fuel-station-backend.onrender.com';
