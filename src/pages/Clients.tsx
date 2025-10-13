@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { apiClient } from '../utils/api';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Select from '../components/ui/Select';
@@ -70,12 +70,12 @@ export default function Clients() {
   }, [activeTab, creditFilters]);
 
   async function loadClients() {
-    const r = await axios.get('/api/clients');
+    const r = await apiClient.get('/api/clients');
     setClients(r.data);
   }
 
   async function loadFuelTypes() {
-    const r = await axios.get('/api/tanks');
+    const r = await apiClient.get('/api/tanks');
     const unique = new Map<number, FuelType>();
     (r.data as any[]).forEach(t => {
       unique.set(t.fuelTypeId || t.fuelType?.id, { id: t.fuelTypeId || t.fuelType.id, name: t.fuelType?.name });
@@ -85,11 +85,11 @@ export default function Clients() {
 
   async function loadCurrentPrices() {
     try {
-      const response = await axios.get('/api/prices/current');
+      const response = await apiClient.get('/api/prices/current');
       const prices: Record<number, number> = {};
       
       // Get fuel types from pumps to map fuel type IDs
-      const pumpsResponse = await axios.get('/api/pumps');
+      const pumpsResponse = await apiClient.get('/api/pumps');
       
       console.log('Prices API response:', response.data);
       console.log('Pumps API response:', pumpsResponse.data);
@@ -119,7 +119,7 @@ export default function Clients() {
     if (creditFilters.startDate) params.append('startDate', creditFilters.startDate);
     if (creditFilters.endDate) params.append('endDate', creditFilters.endDate);
     
-    const r = await axios.get(`/api/credits?${params.toString()}`);
+    const r = await apiClient.get(`/api/credits?${params.toString()}`);
     setCredits(r.data);
   }
 
