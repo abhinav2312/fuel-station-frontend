@@ -65,15 +65,15 @@ export default function Reports() {
     if (!summary) return;
     const rows = [
       ['Metric', 'Value'],
-      ['Total Litres', summary.totals.litres],
-      ['Petrol Litres', summary.totals.petrolLitres],
-      ['Petrol Revenue', summary.revenues.petrolRevenue],
-      ['Diesel Litres', summary.totals.dieselLitres],
-      ['Diesel Revenue', summary.revenues.dieselRevenue],
-      ['Premium Petrol Litres', summary.totals.premiumPetrolLitres],
-      ['Premium Petrol Revenue', summary.revenues.premiumPetrolRevenue],
-      ['Total Revenue', summary.totals.revenue],
-      ['Profit', summary.totals.profit],
+      ['Total Litres', summary.totals?.litres || 0],
+      ['Petrol Litres', summary.totals?.petrolLitres || 0],
+      ['Petrol Revenue', summary.revenues?.petrolRevenue || 0],
+      ['Diesel Litres', summary.totals?.dieselLitres || 0],
+      ['Diesel Revenue', summary.revenues?.dieselRevenue || 0],
+      ['Premium Petrol Litres', summary.totals?.premiumPetrolLitres || 0],
+      ['Premium Petrol Revenue', summary.revenues?.premiumPetrolRevenue || 0],
+      ['Total Revenue', summary.totals?.revenue || 0],
+      ['Profit', summary.totals?.profit || 0],
       ['Money Received', summary.financials?.moneyReceived || 0],
       ['Credit to Collect', summary.financials?.creditToCollect || 0],
       ['Cash Received', summary.financials?.cashReceived || 0],
@@ -146,8 +146,8 @@ export default function Reports() {
                 <p className="text-slate-300 text-sm sm:text-base">Comprehensive business analytics and insights</p>
               </div>
               <div className="text-left sm:text-right">
-                <div className="text-xs sm:text-sm text-slate-400">Period: {summary.period.toUpperCase()}</div>
-                <div className="text-xs sm:text-sm text-slate-400">{new Date(summary.start).toLocaleDateString()} - {new Date(summary.end).toLocaleDateString()}</div>
+                <div className="text-xs sm:text-sm text-slate-400">Period: {summary.period?.toUpperCase() || 'DAILY'}</div>
+                <div className="text-xs sm:text-sm text-slate-400">{summary.start ? new Date(summary.start).toLocaleDateString() : 'Today'} - {summary.end ? new Date(summary.end).toLocaleDateString() : 'Today'}</div>
               </div>
             </div>
 
@@ -157,7 +157,7 @@ export default function Reports() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-slate-300 text-sm font-medium">Total Revenue</p>
-                    <p className="text-3xl font-bold text-white">₹{currency(summary.totals.revenue)}</p>
+                    <p className="text-3xl font-bold text-white">₹{currency(summary.totals?.revenue || 0)}</p>
                   </div>
                   <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
                     <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -171,7 +171,7 @@ export default function Reports() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-slate-300 text-sm font-medium">Money Received</p>
-                    <p className="text-3xl font-bold text-green-400">₹{currency(summary.financials?.moneyReceived)}</p>
+                    <p className="text-3xl font-bold text-green-400">₹{currency(summary.financials?.moneyReceived || 0)}</p>
                   </div>
                   <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
                     <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -185,7 +185,7 @@ export default function Reports() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-slate-300 text-sm font-medium">Credit to Collect</p>
-                    <p className="text-3xl font-bold text-amber-400">₹{currency(summary.financials?.creditToCollect)}</p>
+                    <p className="text-3xl font-bold text-amber-400">₹{currency(summary.financials?.creditToCollect || 0)}</p>
                   </div>
                   <div className="w-12 h-12 bg-amber-500/20 rounded-lg flex items-center justify-center">
                     <svg className="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -199,7 +199,7 @@ export default function Reports() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-slate-300 text-sm font-medium">Total Volume</p>
-                    <p className="text-3xl font-bold text-purple-400">{summary.totals.litres.toFixed(0)}L</p>
+                    <p className="text-3xl font-bold text-purple-400">{(summary.totals?.litres || 0).toFixed(0)}L</p>
                   </div>
                   <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
                     <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -226,11 +226,11 @@ export default function Reports() {
                       <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
                       <div>
                         <p className="font-semibold text-slate-900">Petrol</p>
-                        <p className="text-sm text-slate-600">{summary.totals.petrolLitres.toFixed(0)} litres sold</p>
+                        <p className="text-sm text-slate-600">{(summary.totals?.petrolLitres || 0).toFixed(0)} litres sold</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-slate-900">₹{currency(summary.revenues.petrolRevenue)}</p>
+                      <p className="text-2xl font-bold text-slate-900">₹{currency(summary.revenues?.petrolRevenue || 0)}</p>
                       <p className="text-sm text-slate-600">Revenue</p>
                     </div>
                   </div>
@@ -240,11 +240,11 @@ export default function Reports() {
                       <div className="w-4 h-4 bg-green-500 rounded-full"></div>
                       <div>
                         <p className="font-semibold text-slate-900">Diesel</p>
-                        <p className="text-sm text-slate-600">{summary.totals.dieselLitres.toFixed(0)} litres sold</p>
+                        <p className="text-sm text-slate-600">{(summary.totals?.dieselLitres || 0).toFixed(0)} litres sold</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-slate-900">₹{currency(summary.revenues.dieselRevenue)}</p>
+                      <p className="text-2xl font-bold text-slate-900">₹{currency(summary.revenues?.dieselRevenue || 0)}</p>
                       <p className="text-sm text-slate-600">Revenue</p>
                     </div>
                   </div>
@@ -254,11 +254,11 @@ export default function Reports() {
                       <div className="w-4 h-4 bg-purple-500 rounded-full"></div>
                       <div>
                         <p className="font-semibold text-slate-900">Premium Petrol</p>
-                        <p className="text-sm text-slate-600">{summary.totals.premiumPetrolLitres.toFixed(0)} litres sold</p>
+                        <p className="text-sm text-slate-600">{(summary.totals?.premiumPetrolLitres || 0).toFixed(0)} litres sold</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-slate-900">₹{currency(summary.revenues.premiumPetrolRevenue)}</p>
+                      <p className="text-2xl font-bold text-slate-900">₹{currency(summary.revenues?.premiumPetrolRevenue || 0)}</p>
                       <p className="text-sm text-slate-600">Revenue</p>
                     </div>
                   </div>
@@ -266,11 +266,11 @@ export default function Reports() {
                   <div className="border-t border-slate-200 pt-6">
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-semibold text-slate-900">Total Volume</span>
-                      <span className="text-2xl font-bold text-slate-900">{summary.totals.litres.toFixed(0)}L</span>
+                      <span className="text-2xl font-bold text-slate-900">{(summary.totals?.litres || 0).toFixed(0)}L</span>
                     </div>
                     <div className="flex justify-between items-center mt-2">
                       <span className="text-lg font-semibold text-slate-900">Total Revenue</span>
-                      <span className="text-2xl font-bold text-blue-600">₹{currency(summary.totals.revenue)}</span>
+                      <span className="text-2xl font-bold text-blue-600">₹{currency(summary.totals?.revenue || 0)}</span>
                     </div>
                   </div>
                 </div>
@@ -286,24 +286,24 @@ export default function Reports() {
               <div className="p-8">
                 <div className="space-y-6">
                   <div className="text-center p-6 bg-green-50 rounded-xl border border-green-200">
-                    <div className="text-4xl font-bold text-green-600 mb-2">₹{currency(summary.financials?.moneyReceived)}</div>
+                    <div className="text-4xl font-bold text-green-600 mb-2">₹{currency(summary.financials?.moneyReceived || 0)}</div>
                     <div className="text-green-800 font-semibold">Money Received</div>
                     <div className="text-sm text-green-600 mt-1">Cash + Online Payments</div>
                   </div>
 
                   <div className="text-center p-6 bg-amber-50 rounded-xl border border-amber-200">
-                    <div className="text-4xl font-bold text-amber-600 mb-2">₹{currency(summary.financials?.creditToCollect)}</div>
+                    <div className="text-4xl font-bold text-amber-600 mb-2">₹{currency(summary.financials?.creditToCollect || 0)}</div>
                     <div className="text-amber-800 font-semibold">Credit to Collect</div>
                     <div className="text-sm text-amber-600 mt-1">Outstanding payments</div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 pt-4">
                     <div className="text-center p-4 bg-slate-50 rounded-lg">
-                      <div className="text-2xl font-bold text-slate-900">₹{currency(summary.financials?.cashReceived)}</div>
+                      <div className="text-2xl font-bold text-slate-900">₹{currency(summary.financials?.cashReceived || 0)}</div>
                       <div className="text-sm text-slate-600">Cash</div>
                     </div>
                     <div className="text-center p-4 bg-slate-50 rounded-lg">
-                      <div className="text-2xl font-bold text-slate-900">₹{currency(summary.financials?.onlineReceived)}</div>
+                      <div className="text-2xl font-bold text-slate-900">₹{currency(summary.financials?.onlineReceived || 0)}</div>
                       <div className="text-sm text-slate-600">Online</div>
                     </div>
                   </div>
