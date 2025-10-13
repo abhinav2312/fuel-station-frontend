@@ -154,7 +154,7 @@ export default function Validation() {
                   <p className="text-sm">
                     {validationData.isBalanced 
                       ? 'All payments match gross sales' 
-                      : `Difference: ₹${Math.abs(validationData.difference).toFixed(2)}`
+                      : `Difference: ₹${Math.abs(validationData.difference || 0).toFixed(2)}`
                     }
                   </p>
                 </div>
@@ -173,7 +173,7 @@ export default function Validation() {
                 </div>
                 <div className="ml-4">
                   <p className="metric-label">Gross Sales</p>
-                  <p className="metric-value">₹{validationData.grossSales.toFixed(2)}</p>
+                  <p className="metric-value">₹{(validationData.grossSales || 0).toFixed(2)}</p>
                 </div>
               </div>
             </div>
@@ -187,7 +187,7 @@ export default function Validation() {
                 </div>
                 <div className="ml-4">
                   <p className="metric-label">Cash Received</p>
-                  <p className="metric-value">₹{validationData.cashReceipts.toFixed(2)}</p>
+                  <p className="metric-value">₹{(validationData.cashReceipts || 0).toFixed(2)}</p>
                 </div>
               </div>
             </div>
@@ -201,7 +201,7 @@ export default function Validation() {
                 </div>
                 <div className="ml-4">
                   <p className="metric-label">Online Payments</p>
-                  <p className="metric-value">₹{validationData.onlinePayments.toFixed(2)}</p>
+                  <p className="metric-value">₹{(validationData.onlinePayments || 0).toFixed(2)}</p>
                 </div>
               </div>
             </div>
@@ -215,7 +215,7 @@ export default function Validation() {
                 </div>
                 <div className="ml-4">
                   <p className="metric-label">Credit Sales</p>
-                  <p className="metric-value">₹{validationData.creditSales.toFixed(2)}</p>
+                  <p className="metric-value">₹{(validationData.creditSales || 0).toFixed(2)}</p>
                 </div>
               </div>
             </div>
@@ -230,30 +230,30 @@ export default function Validation() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center py-2 border-b border-gray-200">
                   <span className="text-slate-600">Gross Sales (from readings)</span>
-                  <span className="font-semibold text-slate-900">₹{validationData.grossSales.toFixed(2)}</span>
+                  <span className="font-semibold text-slate-900">₹{(validationData.grossSales || 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-200">
                   <span className="text-slate-600">Cash Received</span>
-                  <span className="font-semibold text-green-600">₹{validationData.cashReceipts.toFixed(2)}</span>
+                  <span className="font-semibold text-green-600">₹{(validationData.cashReceipts || 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-200">
                   <span className="text-slate-600">Online Payments</span>
-                  <span className="font-semibold text-blue-600">₹{validationData.onlinePayments.toFixed(2)}</span>
+                  <span className="font-semibold text-blue-600">₹{(validationData.onlinePayments || 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-200">
                   <span className="text-slate-600">Credit Sales</span>
-                  <span className="font-semibold text-amber-600">₹{validationData.creditSales.toFixed(2)}</span>
+                  <span className="font-semibold text-amber-600">₹{(validationData.creditSales || 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-200">
                   <span className="text-slate-600 font-medium">Total Received</span>
-                  <span className="font-bold text-slate-900">₹{validationData.totalReceived.toFixed(2)}</span>
+                  <span className="font-bold text-slate-900">₹{(validationData.totalReceived || 0).toFixed(2)}</span>
                 </div>
                 <div className={`flex justify-between items-center py-2 ${
                   validationData.isBalanced ? 'text-green-600' : 'text-red-600'
                 }`}>
                   <span className="font-medium">Difference</span>
                   <span className="font-bold">
-                    {validationData.difference >= 0 ? '+' : ''}₹{validationData.difference.toFixed(2)}
+                    {validationData.difference >= 0 ? '+' : ''}₹{(validationData.difference || 0).toFixed(2)}
                   </span>
                 </div>
               </div>

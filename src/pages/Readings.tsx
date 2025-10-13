@@ -58,12 +58,13 @@ export default function Readings() {
         if (pump.fuelType) {
           const key = pump.fuelType.name.toLowerCase().replace(/\s+/g, '');
           if (response.data[key]) {
-            prices[pump.fuelTypeId] = response.data[key];
+            prices[pump.fuelType.id] = response.data[key];
           }
         }
       });
       
       setCurrentPrices(prices);
+      console.log('Loaded current prices:', prices);
     } catch (error) {
       console.error('Error loading current prices:', error);
     }
