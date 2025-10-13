@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { apiClient } from '../utils/api';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 
@@ -54,7 +54,7 @@ export default function Payments() {
 
   async function loadPumps() {
     try {
-      const response = await axios.get('/api/pumps');
+      const response = await apiClient.get('/api/pumps');
       setPumps(response.data);
     } catch (error) {
       console.error('Error loading pumps:', error);
@@ -63,7 +63,7 @@ export default function Payments() {
 
   async function loadCashReceipts() {
     try {
-      const response = await axios.get('/api/cash-receipts', { params: { date } });
+      const response = await apiClient.get('/api/cash-receipts', { params: { date } });
       const receiptsMap: Record<number, CashReceipt> = {};
       response.data.forEach((receipt: CashReceipt) => {
         receiptsMap[receipt.pumpId] = receipt;
@@ -76,7 +76,7 @@ export default function Payments() {
 
   async function loadOnlinePayments() {
     try {
-      const response = await axios.get('/api/online-payments', { params: { date } });
+      const response = await apiClient.get('/api/online-payments', { params: { date } });
       setOnlinePayments(response.data);
     } catch (error) {
       console.error('Error loading online payments:', error);
@@ -86,8 +86,8 @@ export default function Payments() {
   async function loadHistory() {
     try {
       const [cashRes, onlineRes] = await Promise.all([
-        axios.get('/api/cash-receipts', { params: { date } }),
-        axios.get('/api/online-payments', { params: { date } })
+        apiClient.get('/api/cash-receipts', { params: { date } }),
+        apiClient.get('/api/online-payments', { params: { date } })
       ]);
       setHistory({ cashReceipts: cashRes.data, onlinePayments: onlineRes.data });
     } catch (error) {
@@ -114,7 +114,7 @@ export default function Payments() {
     if (!receipt || !receipt.amount) return;
     
     try {
-      await axios.post('/api/cash-receipts', receipt);
+      await apiClient.post('/api/cash-receipts', receipt);
       showMessage('Cash receipt saved successfully', 'success');
       await loadCashReceipts();
     } catch (error) {
@@ -131,7 +131,7 @@ export default function Payments() {
         return;
       }
       
-      await axios.post('/api/cash-receipts/bulk', { receipts: receiptsToSave });
+      await apiClient.post('/api/cash-receipts/bulk', { receipts: receiptsToSave });
       showMessage('All cash receipts saved successfully', 'success');
       
       // Clear the form after successful save
@@ -160,7 +160,7 @@ export default function Payments() {
     }
 
     try {
-      await axios.post('/api/online-payments', newPayment);
+      await apiClient.post('/api/online-payments', newPayment);
       showMessage('Online payment recorded successfully', 'success');
       setNewPayment({
         date,

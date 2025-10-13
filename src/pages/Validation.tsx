@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { apiClient } from '../utils/api';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 
@@ -39,7 +39,7 @@ export default function Validation() {
   async function loadValidationData() {
     setLoading(true);
     try {
-      const response = await axios.get('/api/validation', { params: { date } });
+      const response = await apiClient.get('/api/validation', { params: { date } });
       setValidationData(response.data);
     } catch (error) {
       console.error('Error loading validation data:', error);

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { apiClient } from '../utils/api';
 
 type FuelType = { id: number; name: string; price: number | null };
 type CombinedRow = Record<string, number> & { date: string };
@@ -29,9 +29,9 @@ export default function Prices() {
   async function load() {
     try {
       const [combinedRes, currentRes, fuelTypesRes] = await Promise.all([
-        axios.get('/api/prices/combined'),
-        axios.get('/api/prices/current'),
-        axios.get('/api/tanks')
+        apiClient.get('/api/prices/combined'),
+        apiClient.get('/api/prices/current'),
+        apiClient.get('/api/tanks')
       ]);
       
       setRows(combinedRes.data);
@@ -67,7 +67,7 @@ export default function Prices() {
   
   async function saveAll() {
     if (!allFilled) return;
-    await axios.post('/api/prices/set', { prices, date });
+    await apiClient.post('/api/prices/set', { prices, date });
     setPrices({});
     await load();
   }

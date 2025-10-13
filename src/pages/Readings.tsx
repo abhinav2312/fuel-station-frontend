@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { apiClient } from '../utils/api';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import { logger, LogCategory } from '../utils/logger';
@@ -39,7 +39,7 @@ export default function Readings() {
 
   async function loadPumps() {
     try {
-      const response = await axios.get('/api/pumps');
+      const response = await apiClient.get('/api/pumps');
       setTanks(response.data); // Keep using tanks state for now to avoid breaking changes
     } catch (error) {
       console.error('Error loading pumps:', error);
@@ -48,11 +48,11 @@ export default function Readings() {
 
   async function loadCurrentPrices() {
     try {
-      const response = await axios.get('/api/prices/current');
+      const response = await apiClient.get('/api/prices/current');
       const prices: Record<number, number> = {};
       
       // Get fuel types from pumps to map fuel type IDs
-      const pumpsResponse = await axios.get('/api/pumps');
+      const pumpsResponse = await apiClient.get('/api/pumps');
       
       pumpsResponse.data.forEach((pump: any) => {
         if (pump.fuelType) {
@@ -78,7 +78,7 @@ export default function Readings() {
   }, [date, activeTab, historyDate]);
 
   async function loadReadings() {
-    const r = await axios.get('/api/readings', { params: { date } });
+    const r = await apiClient.get('/api/readings', { params: { date } });
     const byTank: Record<number, Reading> = {};
     (r.data as any[]).forEach((dr) => {
       byTank[dr.pumpId] = {
@@ -95,7 +95,7 @@ export default function Readings() {
 
   async function loadHistory() {
     // Load recent readings for history view with pump information
-    const r = await axios.get('/api/readings', { params: { date: historyDate } });
+    const r = await apiClient.get('/api/readings', { params: { date: historyDate } });
     const readingsWithPumps = r.data.map((reading: any) => ({
       ...reading,
       pump: tanks.find(t => t.id === reading.pumpId)
@@ -171,7 +171,7 @@ export default function Readings() {
         });
       });
       
-      const response = await axios.post('/api/readings/bulk', { readings: readingsWithPrices });
+      const response = await apiClient.post('/api/readings/bulk', { readings: readingsWithPrices });
       logger.info('Readings saved successfully', { response: response.data });
       logger.formSubmission('Readings', true, { readingsCount: readingsWithPrices.length });
       showMessage('All readings saved successfully', 'success');

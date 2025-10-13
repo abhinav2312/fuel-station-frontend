@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { apiClient } from '../utils/api';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Select from '../components/ui/Select';
@@ -59,7 +59,7 @@ export default function Purchases() {
 
   async function loadTanks() {
     try {
-      const response = await axios.get('/api/tanks');
+      const response = await apiClient.get('/api/tanks');
       setTanks(response.data);
       
       // Extract unique fuel types from tanks
@@ -78,7 +78,7 @@ export default function Purchases() {
 
   async function loadPurchases() {
     try {
-      const response = await axios.get('/api/purchases');
+      const response = await apiClient.get('/api/purchases');
       setPurchases(response.data);
     } catch (error) {
       console.error('Error loading purchases:', error);
@@ -87,7 +87,7 @@ export default function Purchases() {
 
   async function loadPurchasePrices() {
     try {
-      const response = await axios.get('/api/purchase-prices');
+      const response = await apiClient.get('/api/purchase-prices');
       setPurchasePrices(response.data);
     } catch (error) {
       console.error('Error loading purchase prices:', error);
@@ -98,7 +98,7 @@ export default function Purchases() {
 
   async function savePurchasePrices() {
     try {
-      await axios.post('/api/purchase-prices', purchasePrices);
+      await apiClient.post('/api/purchase-prices', purchasePrices);
       showMessage('Purchase prices saved successfully!', 'success');
     } catch (error) {
       console.error('Error saving purchase prices:', error);
@@ -126,7 +126,7 @@ export default function Purchases() {
         if (!unitCost) {
           throw new Error(`Purchase price not set for selected tank. Please set purchase prices first.`);
         }
-        return axios.post('/api/purchases', { 
+        return apiClient.post('/api/purchases', { 
           tankId, 
           litres, 
           unitCost,

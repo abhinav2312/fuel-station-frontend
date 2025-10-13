@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import axios from 'axios';
+import { apiClient } from '../utils/api';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Select from '../components/ui/Select';
@@ -43,16 +43,16 @@ export default function Reports() {
   async function load() {
     const params: any = { period };
     if (period === 'daily') params.date = date;
-    const r = await axios.get('/api/reports/summary', { params });
+    const r = await apiClient.get('/api/reports/summary', { params });
     console.log('Reports data received:', r.data);
     setSummary(r.data);
     
     if (period === 'daily') {
-      const readingsRes = await axios.get('/api/readings', { params: { date } });
+      const readingsRes = await apiClient.get('/api/readings', { params: { date } });
       setReadings(readingsRes.data);
       
       // Load credits for the day using the credits endpoint with date filters
-      const creditsRes = await axios.get('/api/credits', { 
+      const creditsRes = await apiClient.get('/api/credits', { 
         params: { startDate: date, endDate: date } 
       });
       setCredits(creditsRes.data);
