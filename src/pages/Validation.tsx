@@ -9,7 +9,9 @@ type ValidationData = {
   cashReceipts: number;
   onlinePayments: number;
   creditSales: number;
+  creditPayments: number;
   totalReceived: number;
+  expectedTotal: number;
   difference: number;
   isBalanced: boolean;
 };
@@ -219,42 +221,96 @@ export default function Validation() {
                 </div>
               </div>
             </div>
+
+            <div className="metric-card">
+              <div className="flex items-center">
+                <div className="p-3 bg-orange-100 rounded-lg">
+                  <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <p className="metric-label">Credit Payments</p>
+                  <p className="metric-value">₹{(validationData.creditPayments || 0).toFixed(2)}</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Detailed Breakdown */}
           <div className="card">
             <div className="card-header">
-              <h3 className="text-lg font-semibold text-slate-900">Payment Breakdown</h3>
+              <h3 className="text-lg font-semibold text-slate-900">Money Flow Validation</h3>
+              <p className="text-sm text-slate-600 mt-1">Validating that money from readings matches money received</p>
             </div>
             <div className="card-body">
               <div className="space-y-4">
-                <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                  <span className="text-slate-600">Gross Sales (from readings)</span>
-                  <span className="font-semibold text-slate-900">₹{(validationData.grossSales || 0).toFixed(2)}</span>
+                {/* Money From Readings */}
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-blue-900 mb-3">💰 Money We Should Get (From Readings)</h4>
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-slate-700">Gross Sales (from pump readings)</span>
+                    <span className="font-bold text-blue-900">₹{(validationData.grossSales || 0).toFixed(2)}</span>
+                  </div>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                  <span className="text-slate-600">Cash Received</span>
-                  <span className="font-semibold text-green-600">₹{(validationData.cashReceipts || 0).toFixed(2)}</span>
+
+                {/* Money Actually Received */}
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-green-900 mb-3">💵 Money Actually Received</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center py-1">
+                      <span className="text-slate-700">Cash from Workers</span>
+                      <span className="font-semibold text-green-600">₹{(validationData.cashReceipts || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1">
+                      <span className="text-slate-700">UPI/Online Payments</span>
+                      <span className="font-semibold text-green-600">₹{(validationData.onlinePayments || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1">
+                      <span className="text-slate-700">Credit Payments (paid today)</span>
+                      <span className="font-semibold text-green-600">₹{(validationData.creditPayments || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-t border-green-200">
+                      <span className="font-medium text-green-800">Total Money Received</span>
+                      <span className="font-bold text-green-900">₹{(validationData.totalReceived || 0).toFixed(2)}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                  <span className="text-slate-600">Online Payments</span>
-                  <span className="font-semibold text-blue-600">₹{(validationData.onlinePayments || 0).toFixed(2)}</span>
+
+                {/* Money to be Received Later */}
+                <div className="bg-amber-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-amber-900 mb-3">⏳ Money to be Received Later</h4>
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-slate-700">Credit Sales (to be paid later)</span>
+                    <span className="font-semibold text-amber-600">₹{(validationData.creditSales || 0).toFixed(2)}</span>
+                  </div>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                  <span className="text-slate-600">Credit Sales</span>
-                  <span className="font-semibold text-amber-600">₹{(validationData.creditSales || 0).toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                  <span className="text-slate-600 font-medium">Total Received</span>
-                  <span className="font-bold text-slate-900">₹{(validationData.totalReceived || 0).toFixed(2)}</span>
-                </div>
-                <div className={`flex justify-between items-center py-2 ${
-                  validationData.isBalanced ? 'text-green-600' : 'text-red-600'
-                }`}>
-                  <span className="font-medium">Difference</span>
-                  <span className="font-bold">
-                    {validationData.difference >= 0 ? '+' : ''}₹{(validationData.difference || 0).toFixed(2)}
-                  </span>
+
+                {/* Validation Result */}
+                <div className={`p-4 rounded-lg ${validationData.isBalanced ? 'bg-green-50' : 'bg-red-50'}`}>
+                  <h4 className={`font-semibold mb-3 ${validationData.isBalanced ? 'text-green-900' : 'text-red-900'}`}>
+                    {validationData.isBalanced ? '✅ Validation Passed' : '❌ Validation Failed'}
+                  </h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center py-1">
+                      <span className="text-slate-700">Money Received + Credit Sales</span>
+                      <span className="font-semibold">₹{(validationData.expectedTotal || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1">
+                      <span className="text-slate-700">Gross Sales (from readings)</span>
+                      <span className="font-semibold">₹{(validationData.grossSales || 0).toFixed(2)}</span>
+                    </div>
+                    <div className={`flex justify-between items-center py-2 border-t ${
+                      validationData.isBalanced ? 'border-green-200' : 'border-red-200'
+                    }`}>
+                      <span className={`font-medium ${validationData.isBalanced ? 'text-green-800' : 'text-red-800'}`}>
+                        Difference
+                      </span>
+                      <span className={`font-bold ${validationData.isBalanced ? 'text-green-900' : 'text-red-900'}`}>
+                        {validationData.difference >= 0 ? '+' : ''}₹{(validationData.difference || 0).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

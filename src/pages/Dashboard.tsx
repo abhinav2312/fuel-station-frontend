@@ -54,6 +54,8 @@ export default function Dashboard() {
   async function loadDashboardData() {
     try {
       setLoading(true);
+      console.log('Loading dashboard data for period:', dateRange);
+      
       const [salesResponse, clientsResponse, creditsResponse, tanksResponse, salesTrendResponse] = await Promise.all([
         apiClient.get(`/api/reports/summary?period=${dateRange}`),
         apiClient.get('/api/clients'),
@@ -68,6 +70,14 @@ export default function Dashboard() {
       const tanks = tanksResponse.data;
       const salesTrend = salesTrendResponse.data || [];
 
+      console.log('Dashboard data loaded:', {
+        sales: sales.totals,
+        clients: clients.length,
+        credits: credits.length,
+        tanks: tanks.length,
+        salesTrend: salesTrend.length
+      });
+
       // Calculate metrics
       const todaySales = sales.totals?.revenue || 0;
       const todayProfit = sales.totals?.profit || 0;
@@ -78,7 +88,7 @@ export default function Dashboard() {
       // Process tank levels
       const tankLevels = tanks.map((tank: any) => {
         const currentLevel = Number(tank.currentLevel) || 0;
-        const capacity = Number(tank.capacity) || 1; // Avoid division by zero
+        const capacity = Number(tank.capacityLit) || 1; // Use capacityLit field from API
         
         // Cap percentage at 100% to prevent unrealistic values
         let percentage = capacity > 0 ? (currentLevel / capacity) * 100 : 0;
@@ -184,6 +194,16 @@ export default function Dashboard() {
                   <option value="month">This Month</option>
                 </select>
               </div>
+              <button 
+                onClick={loadDashboardData}
+                disabled={loading}
+                className="premium-btn premium-btn-secondary flex items-center space-x-2"
+              >
+                <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span>{loading ? 'Refreshing...' : 'Refresh'}</span>
+              </button>
               <div className="premium-badge premium-badge-success">
                 <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />

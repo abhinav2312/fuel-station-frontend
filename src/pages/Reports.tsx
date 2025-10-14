@@ -9,12 +9,26 @@ type Summary = {
   period: string;
   start: string;
   end: string;
-  totals: { litres: number; revenue: number; profit: number };
+  totals: { 
+    litres: number; 
+    revenue: number; 
+    profit: number; 
+    costPrice: number; 
+    margin: number 
+  };
   fuelTypes: Array<{
     id: number;
     name: string;
     litres: number;
     revenue: number;
+  }>;
+  fuelTypeProfits: Array<{
+    name: string;
+    litres: number;
+    costPrice: number;
+    sellingPrice: number;
+    profit: number;
+    margin: number;
   }>;
   financials: { totalRevenue: number; creditToCollect: number; moneyReceived: number; cashReceived: number; onlineReceived: number };
 };
@@ -72,18 +86,30 @@ export default function Reports() {
     const rows = [
       ['Metric', 'Value'],
       ['Total Litres', summary.totals?.litres || 0],
+      ['Total Revenue', summary.totals?.revenue || 0],
+      ['Total Cost', summary.totals?.costPrice || 0],
+      ['Total Profit', summary.totals?.profit || 0],
+      ['Profit Margin (%)', (summary.totals?.margin || 0).toFixed(2)],
+      ['Money Received', summary.financials?.moneyReceived || 0],
+      ['Credit to Collect', summary.financials?.creditToCollect || 0],
+      ['Cash Received', summary.financials?.cashReceived || 0],
+      ['Online Received', summary.financials?.onlineReceived || 0],
+      ['', ''], // Empty row
+      ['Fuel Type Breakdown', ''],
       ...(summary.fuelTypes || []).map(fuelType => [
         `${fuelType.name} Litres`, fuelType.litres || 0
       ]),
       ...(summary.fuelTypes || []).map(fuelType => [
         `${fuelType.name} Revenue`, fuelType.revenue || 0
       ]),
-      ['Total Revenue', summary.totals?.revenue || 0],
-      ['Profit', summary.totals?.profit || 0],
-      ['Money Received', summary.financials?.moneyReceived || 0],
-      ['Credit to Collect', summary.financials?.creditToCollect || 0],
-      ['Cash Received', summary.financials?.cashReceived || 0],
-      ['Online Received', summary.financials?.onlineReceived || 0],
+      ['', ''], // Empty row
+      ['Profit by Fuel Type', ''],
+      ...(summary.fuelTypeProfits || []).map(fuelProfit => [
+        `${fuelProfit.name} Profit`, fuelProfit.profit || 0
+      ]),
+      ...(summary.fuelTypeProfits || []).map(fuelProfit => [
+        `${fuelProfit.name} Margin (%)`, (fuelProfit.margin || 0).toFixed(2)
+      ]),
     ];
     const csv = rows.map(r => r.join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -321,6 +347,102 @@ export default function Reports() {
                       <div className="text-sm text-slate-600">Online</div>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Profit Analysis */}
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-green-600 to-green-700 px-8 py-6">
+              <h3 className="text-xl font-bold text-white">Profit Analysis</h3>
+              <p className="text-green-100">Detailed profit breakdown by fuel type and overall margins</p>
+            </div>
+            <div className="p-8">
+              {/* Overall Profit Summary */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="text-center p-6 bg-green-50 rounded-xl border border-green-200">
+                  <div className="text-3xl font-bold text-green-600 mb-2">₹{currency(summary.totals?.profit || 0)}</div>
+                  <div className="text-green-800 font-semibold">Total Profit</div>
+                  <div className="text-sm text-green-600 mt-1">Net profit earned</div>
+                </div>
+                
+                <div className="text-center p-6 bg-blue-50 rounded-xl border border-blue-200">
+                  <div className="text-3xl font-bold text-blue-600 mb-2">₹{currency(summary.totals?.costPrice || 0)}</div>
+                  <div className="text-blue-800 font-semibold">Total Cost</div>
+                  <div className="text-sm text-blue-600 mt-1">Cost of goods sold</div>
+                </div>
+                
+                <div className="text-center p-6 bg-purple-50 rounded-xl border border-purple-200">
+                  <div className="text-3xl font-bold text-purple-600 mb-2">{(summary.totals?.margin || 0).toFixed(1)}%</div>
+                  <div className="text-purple-800 font-semibold">Profit Margin</div>
+                  <div className="text-sm text-purple-600 mt-1">Overall margin</div>
+                </div>
+              </div>
+
+              {/* Fuel Type Profit Breakdown */}
+              <div className="space-y-4">
+                <h4 className="text-lg font-semibold text-slate-900 mb-4">Profit by Fuel Type</h4>
+                {summary.fuelTypeProfits?.map((fuelProfit, index) => {
+                  const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500', 'bg-red-500'];
+                  const color = colors[index % colors.length];
+                  
+                  return (
+                    <div key={fuelProfit.name} className="bg-slate-50 rounded-xl p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-4 h-4 ${color} rounded-full`}></div>
+                          <h5 className="text-lg font-semibold text-slate-900">{fuelProfit.name}</h5>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-2xl font-bold text-green-600">₹{currency(fuelProfit.profit)}</div>
+                          <div className="text-sm text-slate-600">Profit</div>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="text-center p-3 bg-white rounded-lg">
+                          <div className="text-lg font-semibold text-slate-900">{fuelProfit.litres.toFixed(0)}L</div>
+                          <div className="text-xs text-slate-600">Volume</div>
+                        </div>
+                        <div className="text-center p-3 bg-white rounded-lg">
+                          <div className="text-lg font-semibold text-blue-600">₹{currency(fuelProfit.sellingPrice)}</div>
+                          <div className="text-xs text-slate-600">Revenue</div>
+                        </div>
+                        <div className="text-center p-3 bg-white rounded-lg">
+                          <div className="text-lg font-semibold text-red-600">₹{currency(fuelProfit.costPrice)}</div>
+                          <div className="text-xs text-slate-600">Cost</div>
+                        </div>
+                        <div className="text-center p-3 bg-white rounded-lg">
+                          <div className="text-lg font-semibold text-purple-600">{fuelProfit.margin.toFixed(1)}%</div>
+                          <div className="text-xs text-slate-600">Margin</div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Profit Chart */}
+              <div className="mt-8">
+                <h4 className="text-lg font-semibold text-slate-900 mb-4">Profit vs Revenue Comparison</h4>
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={summary.fuelTypeProfits || []}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis tickFormatter={(value) => `₹${(value/1000).toFixed(0)}k`} />
+                      <Tooltip 
+                        formatter={(value: number, name: string) => [
+                          `₹${value.toLocaleString()}`, 
+                          name === 'sellingPrice' ? 'Revenue' : 'Profit'
+                        ]}
+                      />
+                      <Legend />
+                      <Bar dataKey="sellingPrice" fill="#3B82F6" name="Revenue" />
+                      <Bar dataKey="profit" fill="#10B981" name="Profit" />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
             </div>
