@@ -3,13 +3,19 @@ import { apiClient } from '../utils/api';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Select from '../components/ui/Select';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 type Summary = {
   period: string;
   start: string;
   end: string;
-  totals: { litres: number; petrolLitres: number; dieselLitres: number; premiumPetrolLitres: number; revenue: number; profit: number };
-  revenues: { petrolRevenue: number; dieselRevenue: number; premiumPetrolRevenue: number };
+  totals: { litres: number; revenue: number; profit: number };
+  fuelTypes: Array<{
+    id: number;
+    name: string;
+    litres: number;
+    revenue: number;
+  }>;
   financials: { totalRevenue: number; creditToCollect: number; moneyReceived: number; cashReceived: number; onlineReceived: number };
 };
 
@@ -66,12 +72,12 @@ export default function Reports() {
     const rows = [
       ['Metric', 'Value'],
       ['Total Litres', summary.totals?.litres || 0],
-      ['Petrol Litres', summary.totals?.petrolLitres || 0],
-      ['Petrol Revenue', summary.revenues?.petrolRevenue || 0],
-      ['Diesel Litres', summary.totals?.dieselLitres || 0],
-      ['Diesel Revenue', summary.revenues?.dieselRevenue || 0],
-      ['Premium Petrol Litres', summary.totals?.premiumPetrolLitres || 0],
-      ['Premium Petrol Revenue', summary.revenues?.premiumPetrolRevenue || 0],
+      ...(summary.fuelTypes || []).map(fuelType => [
+        `${fuelType.name} Litres`, fuelType.litres || 0
+      ]),
+      ...(summary.fuelTypes || []).map(fuelType => [
+        `${fuelType.name} Revenue`, fuelType.revenue || 0
+      ]),
       ['Total Revenue', summary.totals?.revenue || 0],
       ['Profit', summary.totals?.profit || 0],
       ['Money Received', summary.financials?.moneyReceived || 0],
@@ -221,47 +227,26 @@ export default function Reports() {
               </div>
               <div className="p-8">
                 <div className="space-y-6">
-                  <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
-                      <div>
-                        <p className="font-semibold text-slate-900">Petrol</p>
-                        <p className="text-sm text-slate-600">{(summary.totals?.petrolLitres || 0).toFixed(0)} litres sold</p>
+                  {summary.fuelTypes?.map((fuelType, index) => {
+                    const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500', 'bg-red-500'];
+                    const color = colors[index % colors.length];
+                    
+                    return (
+                      <div key={fuelType.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
+                        <div className="flex items-center space-x-4">
+                          <div className={`w-4 h-4 ${color} rounded-full`}></div>
+                          <div>
+                            <p className="font-semibold text-slate-900">{fuelType.name}</p>
+                            <p className="text-sm text-slate-600">{(fuelType.litres || 0).toFixed(0)} litres sold</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-2xl font-bold text-slate-900">₹{currency(fuelType.revenue || 0)}</p>
+                          <p className="text-sm text-slate-600">Revenue</p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-slate-900">₹{currency(summary.revenues?.petrolRevenue || 0)}</p>
-                      <p className="text-sm text-slate-600">Revenue</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-4 h-4 bg-green-500 rounded-full"></div>
-                      <div>
-                        <p className="font-semibold text-slate-900">Diesel</p>
-                        <p className="text-sm text-slate-600">{(summary.totals?.dieselLitres || 0).toFixed(0)} litres sold</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-slate-900">₹{currency(summary.revenues?.dieselRevenue || 0)}</p>
-                      <p className="text-sm text-slate-600">Revenue</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-4 h-4 bg-purple-500 rounded-full"></div>
-                      <div>
-                        <p className="font-semibold text-slate-900">Premium Petrol</p>
-                        <p className="text-sm text-slate-600">{(summary.totals?.premiumPetrolLitres || 0).toFixed(0)} litres sold</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-slate-900">₹{currency(summary.revenues?.premiumPetrolRevenue || 0)}</p>
-                      <p className="text-sm text-slate-600">Revenue</p>
-                    </div>
-                  </div>
+                    );
+                  })}
 
                   <div className="border-t border-slate-200 pt-6">
                     <div className="flex justify-between items-center">
@@ -273,6 +258,35 @@ export default function Reports() {
                       <span className="text-2xl font-bold text-blue-600">₹{currency(summary.totals?.revenue || 0)}</span>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Fuel Type Performance Chart */}
+            <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+              <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 px-8 py-6">
+                <h3 className="text-xl font-bold text-white">Fuel Type Performance</h3>
+                <p className="text-indigo-100">Revenue and volume breakdown by fuel type</p>
+              </div>
+              <div className="p-8">
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={summary.fuelTypes || []}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis yAxisId="left" orientation="left" tickFormatter={(value) => `₹${(value/1000).toFixed(0)}k`} />
+                      <YAxis yAxisId="right" orientation="right" tickFormatter={(value) => `${value}L`} />
+                      <Tooltip 
+                        formatter={(value: number, name: string) => [
+                          name === 'revenue' ? `₹${value.toLocaleString()}` : `${value.toFixed(0)}L`,
+                          name === 'revenue' ? 'Revenue' : 'Volume'
+                        ]}
+                      />
+                      <Legend />
+                      <Bar yAxisId="left" dataKey="revenue" fill="#3B82F6" name="Revenue" />
+                      <Bar yAxisId="right" dataKey="litres" fill="#10B981" name="Volume (L)" />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
             </div>

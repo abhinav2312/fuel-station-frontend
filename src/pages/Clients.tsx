@@ -243,12 +243,12 @@ export default function Clients() {
       showMessage('Please provide owner name', 'error');
       return;
     }
-    
+
     try {
-      await apiClient.put(`/api/clients/${editingClient.id}`, { 
-        name, 
-        ownerName: owner, 
-        phone, 
+      await apiClient.put(`/api/clients/${editingClient.id}`, {
+        name,
+        ownerName: owner,
+        phone,
         address
       });
       await loadClients();
@@ -258,6 +258,21 @@ export default function Clients() {
     } catch (error) {
       console.error('Error updating client:', error);
       showMessage('Failed to update client. Please try again.', 'error');
+    }
+  }
+
+  async function deleteClient(clientId: number) {
+    if (!confirm('Are you sure you want to delete this client? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await apiClient.delete(`/api/clients/${clientId}`);
+      await loadClients();
+      showMessage('Client deleted successfully!', 'success');
+    } catch (error) {
+      console.error('Error deleting client:', error);
+      showMessage('Failed to delete client. Please try again.', 'error');
     }
   }
 
@@ -554,6 +569,13 @@ export default function Clients() {
                         <div className="flex gap-2">
                           <Button variant="ghost" onClick={() => { setSelectedClient(client.id); }}>Select for Credit</Button>
                           <Button variant="ghost" onClick={() => startEditClient(client)}>Edit</Button>
+                          <Button 
+                            variant="ghost" 
+                            onClick={() => deleteClient(client.id)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            Delete
+                          </Button>
                         </div>
                       </td>
                     </tr>

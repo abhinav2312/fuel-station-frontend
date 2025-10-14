@@ -4,29 +4,12 @@ import { Card } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import LogViewer from '../components/LogViewer';
 
-type Tank = {
-  id: number;
-  name: string;
-  capacityLit: number;
-  currentLevel: number;
-  fuelType: {
-    name: string;
-    price: number;
-  };
-};
 
 export default function Settings() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState<'success' | 'error'>('success');
   const [showLogViewer, setShowLogViewer] = useState(false);
-  const [tanks, setTanks] = useState<Tank[]>([]);
-  const [tankUpdates, setTankUpdates] = useState<Record<number, { level: string; capacity: string }>>({});
-
-  // Load tanks on component mount
-  useEffect(() => {
-    loadTanks();
-  }, []);
 
   // Message handling with auto-hide
   function showMessage(text: string, type: 'success' | 'error') {
@@ -37,78 +20,8 @@ export default function Settings() {
     }
   }
 
-  async function loadTanks() {
-    try {
-      const response = await apiClient.get('/api/tanks');
-      setTanks(response.data);
-    } catch (error) {
-      console.error('Error loading tanks:', error);
-    }
-  }
 
-  function updateTankField(tankId: number, field: 'level' | 'capacity', value: string) {
-    setTankUpdates(prev => ({
-      ...prev,
-      [tankId]: {
-        ...prev[tankId],
-        [field]: value
-      }
-    }));
-  }
 
-  async function updateTank(tankId: number) {
-    const updates = tankUpdates[tankId];
-    if (!updates) return;
-
-    try {
-      setLoading(true);
-      const updateData: any = {};
-      
-      // Only include fields that have actual values (not empty strings)
-      if (updates.level && updates.level.trim() !== '') {
-        const level = parseFloat(updates.level);
-        if (!isNaN(level) && level >= 0) {
-          updateData.currentLevel = level;
-        }
-      }
-      
-      if (updates.capacity && updates.capacity.trim() !== '') {
-        const capacity = parseFloat(updates.capacity);
-        if (!isNaN(capacity) && capacity > 0) {
-          updateData.capacityLit = capacity;
-        }
-      }
-
-      if (Object.keys(updateData).length === 0) {
-        showMessage('No valid changes to update', 'error');
-        return;
-      }
-
-      const response = await apiClient.put(`/api/tanks/${tankId}`, updateData, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      showMessage('Tank updated successfully!', 'success');
-      
-      // Clear the updates for this tank
-      setTankUpdates(prev => {
-        const newUpdates = { ...prev };
-        delete newUpdates[tankId];
-        return newUpdates;
-      });
-      
-      // Reload tanks
-      await loadTanks();
-    } catch (error: any) {
-      console.error('Error updating tank:', error);
-      console.error('Error response:', error.response?.data);
-      showMessage(`Failed to update tank: ${error.response?.data?.message || error.message}`, 'error');
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function exportData() {
     try {
@@ -116,12 +29,11 @@ export default function Settings() {
       setMessage('Preparing data export...');
       
       // Fetch all data
-      const [sales, clients, purchases, credits, tanks, prices] = await Promise.all([
+      const [sales, clients, purchases, credits, prices] = await Promise.all([
         apiClient.get('/api/sales'),
         apiClient.get('/api/clients'),
         apiClient.get('/api/purchases'),
         apiClient.get('/api/credits'),
-        apiClient.get('/api/tanks'),
         apiClient.get('/api/prices')
       ]);
 
@@ -133,7 +45,6 @@ export default function Settings() {
           clients: clients.data,
           purchases: purchases.data,
           credits: credits.data,
-          tanks: tanks.data,
           prices: prices.data
         }
       };
@@ -378,77 +289,6 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* Tank Management */}
-      <div className="bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 rounded-2xl p-6 sm:p-8 border border-orange-100">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 bg-orange-600 rounded-xl flex items-center justify-center">
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-            </svg>
-          </div>
-          <h3 className="text-2xl font-bold text-gray-900">Tank Management</h3>
-        </div>
-        
-        <div className="space-y-4">
-          {tanks.map((tank) => (
-            <div key={tank.id} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-900">{tank.name}</h4>
-                  <p className="text-sm text-gray-600">{tank.fuelType.name}</p>
-                </div>
-                <div className="flex items-center gap-4 text-sm text-gray-500">
-                  <span>Current: {tank.currentLevel.toLocaleString()}L</span>
-                  <span>Capacity: {tank.capacityLit.toLocaleString()}L</span>
-                  <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-                    {((tank.currentLevel / tank.capacityLit) * 100).toFixed(1)}%
-                  </span>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Update Current Level (Liters)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    placeholder={tank.currentLevel.toString()}
-                    value={tankUpdates[tank.id]?.level || ''}
-                    onChange={(e) => updateTankField(tank.id, 'level', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Update Capacity (Liters)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    placeholder={tank.capacityLit.toString()}
-                    value={tankUpdates[tank.id]?.capacity || ''}
-                    onChange={(e) => updateTankField(tank.id, 'capacity', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                  />
-                </div>
-              </div>
-              
-              <div className="mt-4 flex justify-end">
-                <Button
-                  onClick={() => updateTank(tank.id)}
-                  disabled={loading || !tankUpdates[tank.id] || (!tankUpdates[tank.id]?.level && !tankUpdates[tank.id]?.capacity)}
-                  className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white font-semibold px-6 py-2 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? 'Updating...' : 'Update Tank'}
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* System Logs */}
       <div className="bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 rounded-2xl p-6 sm:p-8 border border-purple-100">

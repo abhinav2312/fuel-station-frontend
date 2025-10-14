@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { apiClient } from '../utils/api';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 
 type DashboardData = {
   todaySales: number;
@@ -29,12 +30,22 @@ type DashboardData = {
     capacity: number;
     percentage: number;
   }>;
+  salesTrend: Array<{
+    date: string;
+    sales: number;
+    profit: number;
+  }>;
+  fuelTypeSales: Array<{
+    name: string;
+    value: number;
+    color: string;
+  }>;
 };
 
 export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [dateRange, setDateRange] = useState<'today' | 'week' | 'month'>('today');
+  const [dateRange, setDateRange] = useState<'today' | 'week' | 'month' | 'year'>('today');
 
   useEffect(() => {
     loadDashboardData();
@@ -43,21 +54,23 @@ export default function Dashboard() {
   async function loadDashboardData() {
     try {
       setLoading(true);
-      const [salesResponse, clientsResponse, creditsResponse, tanksResponse] = await Promise.all([
+      const [salesResponse, clientsResponse, creditsResponse, tanksResponse, salesTrendResponse] = await Promise.all([
         apiClient.get(`/api/reports/summary?period=${dateRange}`),
         apiClient.get('/api/clients'),
         apiClient.get('/api/credits'),
-        apiClient.get('/api/tanks')
+        apiClient.get('/api/tanks'),
+        apiClient.get(`/api/reports/trends?period=${dateRange}`) // New endpoint for trend data
       ]);
 
       const sales = salesResponse.data;
       const clients = clientsResponse.data;
       const credits = creditsResponse.data;
       const tanks = tanksResponse.data;
+      const salesTrend = salesTrendResponse.data || [];
 
       // Calculate metrics
-      const todaySales = sales.totalSales || 0;
-      const todayProfit = sales.totalProfit || 0;
+      const todaySales = sales.totals?.revenue || 0;
+      const todayProfit = sales.totals?.profit || 0;
       const totalClients = clients.length;
       const totalCredits = credits.length;
       const unpaidCredits = credits.filter((c: any) => c.status === 'unpaid').length;
@@ -85,6 +98,13 @@ export default function Dashboard() {
       // Find low stock tanks
       const lowStockTanks = tankLevels.filter(tank => tank.percentage < 20);
 
+      // Use real fuel type sales data from the sales response
+      const fuelTypeSales = sales.fuelTypes?.map((fuelType: any, index: number) => ({
+        name: fuelType.name,
+        value: fuelType.revenue || 0,
+        color: ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'][index % 5]
+      })) || [];
+
       setData({
         todaySales,
         todayProfit,
@@ -93,7 +113,9 @@ export default function Dashboard() {
         unpaidCredits,
         tankLevels,
         recentSales: [],
-        lowStockTanks
+        lowStockTanks,
+        salesTrend,
+        fuelTypeSales
       });
     } catch (error) {
       console.error('Error loading dashboard data:', error);
@@ -108,6 +130,7 @@ export default function Dashboard() {
       currency: 'INR'
     }).format(amount);
   }
+
 
   if (loading) {
     return (
@@ -227,6 +250,139 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Sales Trend Chart */}
+        <div className="premium-card">
+          <div className="premium-card-header">
+            <h3 className="premium-heading-3">Sales Trend ({dateRange === 'today' ? 'Today' : dateRange === 'week' ? '7 Days' : dateRange === 'month' ? '30 Days' : '12 Months'})</h3>
+            <p className="premium-text-small text-slate-600">
+              {dateRange === 'today' ? 'Hourly' : dateRange === 'week' ? 'Daily' : dateRange === 'month' ? 'Weekly' : 'Monthly'} revenue and profit trends
+            </p>
+          </div>
+          <div className="premium-card-body">
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={data.salesTrend}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="date" 
+                    tickFormatter={(value) => {
+                      if (dateRange === 'today') {
+                        return value; // Show hour directly
+                      } else if (dateRange === 'week') {
+                        return new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                      } else if (dateRange === 'month') {
+                        return new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                      } else {
+                        return new Date(value).toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+                      }
+                    }}
+                  />
+                  <YAxis tickFormatter={(value) => `₹${(value/1000).toFixed(0)}k`} />
+                  <Tooltip 
+                    formatter={(value: number, name: string) => [
+                      `₹${value.toLocaleString()}`, 
+                      name === 'sales' ? 'Revenue' : 'Profit'
+                    ]}
+                    labelFormatter={(label) => {
+                      if (dateRange === 'today') {
+                        return `Hour: ${label}`;
+                      } else if (dateRange === 'year') {
+                        return new Date(label).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                      } else {
+                        return new Date(label).toLocaleDateString();
+                      }
+                    }}
+                  />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="sales" 
+                    stroke="#3B82F6" 
+                    strokeWidth={3}
+                    dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
+                    name="Revenue"
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="profit" 
+                    stroke="#10B981" 
+                    strokeWidth={3}
+                    dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
+                    name="Profit"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        {/* Fuel Type Sales Distribution */}
+        <div className="premium-card">
+          <div className="premium-card-header">
+            <h3 className="premium-heading-3">Sales by Fuel Type</h3>
+            <p className="premium-text-small text-slate-600">Revenue distribution across fuel types</p>
+          </div>
+          <div className="premium-card-body">
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={data.fuelTypeSales}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={(props: any) => `${props.name} ${(props.percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {data.fuelTypeSales.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value: number) => `₹${value.toLocaleString()}`} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tank Levels Chart */}
+      <div className="premium-card mb-8">
+        <div className="premium-card-header">
+          <h3 className="premium-heading-3">Tank Levels Overview</h3>
+          <p className="premium-text-small text-slate-600">Current stock levels across all tanks</p>
+        </div>
+        <div className="premium-card-body">
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data.tankLevels}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis tickFormatter={(value) => `${value}%`} />
+                <Tooltip 
+                  formatter={(value: number, name: string) => [
+                    `${value}%`, 
+                    'Fill Level'
+                  ]}
+                  labelFormatter={(label, payload) => {
+                    const data = payload?.[0]?.payload;
+                    return `${data?.name} (${data?.fuelType})`;
+                  }}
+                />
+                <Bar 
+                  dataKey="percentage" 
+                  fill="#8B5CF6"
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
 
       {/* Low Stock Alert */}
       {data.lowStockTanks.length > 0 && (
