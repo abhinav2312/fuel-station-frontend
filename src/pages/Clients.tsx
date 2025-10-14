@@ -50,6 +50,9 @@ export default function Clients() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [message, setMessage] = useState<string>('');
   const [messageType, setMessageType] = useState<'success' | 'error'>('success');
+  const [showPaymentMethodModal, setShowPaymentMethodModal] = useState(false);
+  const [selectedCreditId, setSelectedCreditId] = useState<number | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'Worker' | 'Owner'>('UPI');
 
   // Message handling with auto-hide
   function showMessage(text: string, type: 'success' | 'error') {
@@ -187,7 +190,8 @@ export default function Clients() {
         note 
       });
       
-      await apiClient.post(`/api/clients/${selectedClient}/credit`, { 
+      await apiClient.post('/api/credits', { 
+        clientId: selectedClient,
         fuelTypeId, 
         litres: finalLitres, 
         pricePerLitre, 
@@ -207,9 +211,27 @@ export default function Clients() {
     }
   }
 
-  async function markAsPaid(creditId: number) {
-    await apiClient.put(`/api/credits/${creditId}/mark-paid`);
-    await loadCredits();
+  function openPaymentMethodModal(creditId: number) {
+    setSelectedCreditId(creditId);
+    setPaymentMethod('UPI');
+    setShowPaymentMethodModal(true);
+  }
+
+  async function markAsPaid() {
+    if (!selectedCreditId) return;
+    
+    try {
+      await apiClient.put(`/api/credits/${selectedCreditId}/mark-paid`, {
+        paymentMethod
+      });
+      await loadCredits();
+      setShowPaymentMethodModal(false);
+      setSelectedCreditId(null);
+      showMessage('Credit marked as paid successfully!', 'success');
+    } catch (error) {
+      console.error('Error marking credit as paid:', error);
+      showMessage('Failed to mark credit as paid. Please try again.', 'error');
+    }
   }
 
   function resetFilters() {
@@ -633,6 +655,7 @@ export default function Clients() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paid Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Method</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
@@ -656,14 +679,92 @@ export default function Clients() {
                         {credit.paidDate ? new Date(credit.paidDate).toLocaleDateString() : '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {credit.paymentMethod ? (
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            credit.paymentMethod === 'UPI' ? 'bg-blue-100 text-blue-800' :
+                            credit.paymentMethod === 'Worker' ? 'bg-green-100 text-green-800' :
+                            'bg-purple-100 text-purple-800'
+                          }`}>
+                            {credit.paymentMethod}
+                          </span>
+                        ) : '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {credit.status === 'unpaid' && (
-                          <Button variant="ghost" onClick={() => markAsPaid(credit.id)}>Mark as Paid</Button>
+                          <Button variant="ghost" onClick={() => openPaymentMethodModal(credit.id)}>Mark as Paid</Button>
                         )}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Method Modal */}
+      {showPaymentMethodModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Select Payment Method</h3>
+            <p className="text-sm text-gray-600 mb-6">How was this credit paid?</p>
+            
+            <div className="space-y-3 mb-6">
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="UPI"
+                  checked={paymentMethod === 'UPI'}
+                  onChange={(e) => setPaymentMethod(e.target.value as 'UPI')}
+                  className="w-4 h-4 text-blue-600"
+                />
+                <span className="text-sm font-medium text-gray-700">UPI Payment</span>
+              </label>
+              
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="Worker"
+                  checked={paymentMethod === 'Worker'}
+                  onChange={(e) => setPaymentMethod(e.target.value as 'Worker')}
+                  className="w-4 h-4 text-blue-600"
+                />
+                <span className="text-sm font-medium text-gray-700">Worker Collection</span>
+              </label>
+              
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="Owner"
+                  checked={paymentMethod === 'Owner'}
+                  onChange={(e) => setPaymentMethod(e.target.value as 'Owner')}
+                  className="w-4 h-4 text-blue-600"
+                />
+                <span className="text-sm font-medium text-gray-700">Owner Collection</span>
+              </label>
+            </div>
+            
+            <div className="flex space-x-3">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setShowPaymentMethodModal(false);
+                  setSelectedCreditId(null);
+                }}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={markAsPaid}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Mark as Paid
+              </Button>
             </div>
           </div>
         </div>
