@@ -22,11 +22,13 @@ type Tank = {
 
 export default function Tanks() {
   const [tanks, setTanks] = useState<Tank[]>([]);
+  const [prices, setPrices] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     logger.setCurrentPage('Tanks');
     loadTanks();
+    loadPrices();
   }, []);
 
   async function loadTanks() {
@@ -42,6 +44,17 @@ export default function Tanks() {
     }
   }
 
+  async function loadPrices() {
+    try {
+      const response = await apiClient.get('/api/prices/current');
+      setPrices(response.data);
+      logger.info('Prices loaded', response.data);
+    } catch (error) {
+      console.error('Error loading prices:', error);
+      logger.error('Failed to load prices', { error });
+    }
+  }
+
   function getTankPercentage(tank: Tank): number {
     return (tank.currentLevel / tank.capacityLit) * 100;
   }
@@ -49,7 +62,8 @@ export default function Tanks() {
   function calculateStockValue(): number {
     return tanks.reduce((total, tank) => {
       const volume = tank.currentLevel || 0;
-      const price = tank.fuelType?.price || 0;
+      const fuelTypeName = tank.fuelType?.name?.toLowerCase().replace(/\s+/g, '') || '';
+      const price = prices[fuelTypeName] || 0;
       return total + (volume * price);
     }, 0);
   }
@@ -60,7 +74,8 @@ export default function Tanks() {
     tanks.forEach(tank => {
       const fuelTypeName = tank.fuelType?.name || 'Unknown';
       const volume = tank.currentLevel || 0;
-      const price = tank.fuelType?.price || 0;
+      const priceKey = fuelTypeName.toLowerCase().replace(/\s+/g, '');
+      const price = prices[priceKey] || 0;
       const value = volume * price;
       
       if (fuelTypeTotals[fuelTypeName]) {
