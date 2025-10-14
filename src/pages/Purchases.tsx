@@ -22,6 +22,7 @@ type Purchase = {
   unitCost: number;
   totalCost: number;
   date: string;
+  status?: string;
   tank: Tank;
 };
 
