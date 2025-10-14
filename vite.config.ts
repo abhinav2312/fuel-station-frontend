@@ -9,7 +9,7 @@ export default defineConfig({
     build: {
         outDir: 'dist',
         sourcemap: false,
-        minify: 'terser',
+        minify: 'esbuild',
         rollupOptions: {
             output: {
                 manualChunks: {
@@ -19,12 +19,6 @@ export default defineConfig({
                     utils: ['axios']
                 }
             }
-        },
-        terserOptions: {
-            compress: {
-                drop_console: true,
-                drop_debugger: true,
-            },
         },
     },
 });
