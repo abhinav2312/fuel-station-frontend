@@ -36,6 +36,9 @@ export default function Payments() {
   const [history, setHistory] = useState<{ cashReceipts: CashReceipt[]; onlinePayments: OnlinePayment[] }>({ cashReceipts: [], onlinePayments: [] });
   const [message, setMessage] = useState<string>('');
   const [messageType, setMessageType] = useState<'success' | 'error'>('success');
+  const [savingCash, setSavingCash] = useState(false);
+  const [savingOnline, setSavingOnline] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   // Form state for new online payment
   const [newPayment, setNewPayment] = useState<OnlinePayment>({
@@ -125,6 +128,7 @@ export default function Payments() {
 
   async function saveAllCashReceipts() {
     try {
+      setSavingCash(true);
       const receiptsToSave = Object.values(cashReceipts).filter(r => r.amount && r.amount > 0);
       if (receiptsToSave.length === 0) {
         showMessage('No cash receipts to save', 'error');
@@ -142,6 +146,8 @@ export default function Payments() {
     } catch (error) {
       console.error('Error saving cash receipts:', error);
       showMessage('Error saving cash receipts', 'error');
+    } finally {
+      setSavingCash(false);
     }
   }
 
@@ -158,8 +164,9 @@ export default function Payments() {
       showMessage('Please enter a valid amount', 'error');
       return;
     }
-
+    
     try {
+      setSavingOnline(true);
       await apiClient.post('/api/online-payments', newPayment);
       showMessage('Online payment recorded successfully', 'success');
       setNewPayment({
@@ -173,6 +180,8 @@ export default function Payments() {
     } catch (error) {
       console.error('Error saving online payment:', error);
       showMessage('Error saving online payment', 'error');
+    } finally {
+      setSavingOnline(false);
     }
   }
 
@@ -426,13 +435,21 @@ export default function Payments() {
                   <div className="text-4xl font-bold text-white mb-2">₹{Number(totalCash).toFixed(2)}</div>
                   <Button 
                     onClick={saveAllCashReceipts} 
+                    disabled={savingCash}
                     variant="primary"
-                    className="!bg-white !text-emerald-600 hover:!bg-emerald-50 font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-2 border-white min-w-[200px]"
+                    className={`!bg-white !text-emerald-600 hover:!bg-emerald-50 font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-2 border-white min-w-[200px] ${savingCash ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    Save All Cash Receipts
+                    {savingCash ? (
+                      <svg className="w-5 h-5 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                    )}
+                    {savingCash ? 'Saving...' : 'Save All Cash Receipts'}
                   </Button>
                 </div>
               </div>
@@ -494,13 +511,21 @@ export default function Payments() {
                 <div className="mt-6 flex justify-end">
                   <Button 
                     onClick={saveOnlinePayment} 
+                    disabled={savingOnline}
                     variant="primary"
-                    className="!bg-blue-600 !text-white hover:!bg-blue-700 font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                    className={`!bg-blue-600 !text-white hover:!bg-blue-700 font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 ${savingOnline ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    Record Payment
+                    {savingOnline ? (
+                      <svg className="w-5 h-5 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                    )}
+                    {savingOnline ? 'Recording...' : 'Record Payment'}
                   </Button>
                 </div>
               </div>

@@ -45,6 +45,7 @@ type DashboardData = {
 export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [graphLoading, setGraphLoading] = useState(false);
   const [dateRange, setDateRange] = useState<'today' | 'thisWeek' | 'thisMonth' | 'last6Months' | 'thisYear' | 'custom'>('today');
   const [customStartDate, setCustomStartDate] = useState<string>(getToday());
   const [customEndDate, setCustomEndDate] = useState<string>(getToday());
@@ -85,6 +86,7 @@ export default function Dashboard() {
 
   async function loadGraphData() {
     try {
+      setGraphLoading(true);
       console.log('Loading graph data for period:', graphTimePeriod);
       
       // Build graph parameters
@@ -137,6 +139,8 @@ export default function Dashboard() {
       });
     } catch (error) {
       console.error('Error loading graph data:', error);
+    } finally {
+      setGraphLoading(false);
     }
   }
 
@@ -429,12 +433,19 @@ export default function Dashboard() {
               <div className="flex gap-2">
                 <button
                   onClick={() => handleGraphPeriodChange('today')}
-                  className={`px-3 py-1 text-xs rounded-lg transition-colors ${
+                  disabled={graphLoading}
+                  className={`px-3 py-1 text-xs rounded-lg transition-colors flex items-center gap-1 ${
                     graphTimePeriod === 'today' 
                       ? 'bg-blue-500 text-white' 
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
+                  } ${graphLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
+                  {graphLoading && graphTimePeriod === 'today' && (
+                    <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  )}
                   Today
                 </button>
                 <button

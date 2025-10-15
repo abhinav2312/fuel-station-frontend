@@ -44,6 +44,8 @@ export default function Purchases() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [showUnloadModal, setShowUnloadModal] = useState(false);
   const [selectedPurchaseId, setSelectedPurchaseId] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [loadingPrices, setLoadingPrices] = useState(false);
 
   // Message handling with auto-hide
   function showMessage(text: string, type: 'success' | 'error') {
@@ -118,6 +120,9 @@ export default function Purchases() {
       showMessage('Please select at least one tank', 'error');
       return;
     }
+    
+    try {
+      setSaving(true);
 
     // Check if all selected tanks have quantities
     const missingQuantities = selectedTanks.filter(tankId => !tankQuantities[tankId] || tankQuantities[tankId] <= 0);
@@ -161,6 +166,8 @@ export default function Purchases() {
       console.log('Tank data refreshed');
     } catch (error: any) {
       showMessage(error?.response?.data?.message || error?.message || 'Failed to record purchase', 'error');
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -557,17 +564,24 @@ export default function Purchases() {
             <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-200">
               <button 
                 onClick={recordPurchase}
-                disabled={!isRecordValid()}
+                disabled={!isRecordValid() || saving}
                 className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
-                  !isRecordValid() 
+                  !isRecordValid() || saving
                     ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
                     : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl'
                 }`}
               >
-                <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Record Purchase
+                {saving ? (
+                  <svg className="w-5 h-5 mr-2 inline animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                )}
+                {saving ? 'Recording...' : 'Record Purchase'}
               </button>
               <button 
                 onClick={resetForms}
