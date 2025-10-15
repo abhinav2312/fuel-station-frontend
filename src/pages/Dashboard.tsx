@@ -122,7 +122,7 @@ export default function Dashboard() {
                      fuelType.name.toLowerCase().includes('diesel') ? '#10B981' : '#8B5CF6'
             };
           })
-          ?.filter((item: any) => item.value > 0) || []; // Filter after mapping
+          ?.filter((item: any) => item.value >= 0) || []; // Show all items, including zero values
         
         console.log('Processed fuelTypeSales:', fuelTypeSales);
         
@@ -233,7 +233,7 @@ export default function Dashboard() {
             color: ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'][index % 5]
           };
         })
-        ?.filter((item: any) => item.value > 0) || []; // Filter after mapping
+        ?.filter((item: any) => item.value >= 0) || []; // Show all items, including zero values
       
       console.log('Processed fuelTypeSales for initial load:', fuelTypeSales);
 

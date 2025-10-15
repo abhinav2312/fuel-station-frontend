@@ -106,37 +106,49 @@ export default function Purchases() {
   }
 
   async function savePurchasePrices() {
+    console.log('savePurchasePrices called, loadingPrices state:', loadingPrices);
+    
+    // Set loading state immediately
+    setLoadingPrices(true);
+    console.log('Loading prices state set to true');
+    
     try {
       await apiClient.post('/api/purchase-prices', { prices: purchasePrices });
       showMessage('Purchase prices saved successfully!', 'success');
     } catch (error) {
       console.error('Error saving purchase prices:', error);
       showMessage('Failed to save purchase prices - API not available yet', 'error');
+    } finally {
+      setLoadingPrices(false);
     }
   }
 
   async function recordPurchase() {
-    if (selectedTanks.length === 0) {
-      showMessage('Please select at least one tank', 'error');
-      return;
-    }
-
-    // Check if all selected tanks have quantities
-    const missingQuantities = selectedTanks.filter(tankId => !tankQuantities[tankId] || tankQuantities[tankId] <= 0);
-    if (missingQuantities.length > 0) {
-      showMessage('Please enter quantities for all selected tanks', 'error');
-      return;
-    }
-
-    // Check if all selected tanks have purchase prices
-    const missingPrices = selectedTanks.filter(tankId => !purchasePrices[tankId] || purchasePrices[tankId] <= 0);
-    if (missingPrices.length > 0) {
-      showMessage('Please set purchase prices for all selected tanks', 'error');
-      return;
-    }
+    console.log('recordPurchase called, saving state:', saving);
+    
+    // Set loading state immediately
+    setSaving(true);
+    console.log('Loading state set to true');
     
     try {
-      setSaving(true);
+      if (selectedTanks.length === 0) {
+        showMessage('Please select at least one tank', 'error');
+        return;
+      }
+
+      // Check if all selected tanks have quantities
+      const missingQuantities = selectedTanks.filter(tankId => !tankQuantities[tankId] || tankQuantities[tankId] <= 0);
+      if (missingQuantities.length > 0) {
+        showMessage('Please enter quantities for all selected tanks', 'error');
+        return;
+      }
+
+      // Check if all selected tanks have purchase prices
+      const missingPrices = selectedTanks.filter(tankId => !purchasePrices[tankId] || purchasePrices[tankId] <= 0);
+      if (missingPrices.length > 0) {
+        showMessage('Please set purchase prices for all selected tanks', 'error');
+        return;
+      }
       const promises = selectedTanks.map(tankId => {
         const unitCost = purchasePrices[tankId];
         const litres = tankQuantities[tankId];
@@ -178,6 +190,7 @@ export default function Purchases() {
     if (!selectedPurchaseId) return;
     
     try {
+      setSaving(true);
       await apiClient.put(`/api/purchases/${selectedPurchaseId}/unload`);
       showMessage('Purchase marked as unloaded and tank updated successfully!', 'success');
       await loadTanks(); // Refresh tank data
@@ -186,6 +199,8 @@ export default function Purchases() {
       setSelectedPurchaseId(null);
     } catch (error: any) {
       showMessage(error?.response?.data?.message || error?.message || 'Failed to mark purchase as unloaded', 'error');
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -394,20 +409,34 @@ export default function Purchases() {
                   </div>
                 </div>
               ))}
+              {/* Debug: Show current loadingPrices state */}
+              {loadingPrices && (
+                <div className="bg-green-100 border border-green-300 text-green-800 px-4 py-2 rounded-lg mb-4">
+                  🔄 Prices loading state is active: {loadingPrices ? 'true' : 'false'}
+                </div>
+              )}
+              
               <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-200">
                 <button
                   onClick={savePurchasePrices}
-                  disabled={!isPricesValid()}
+                  disabled={!isPricesValid() || loadingPrices}
                   className={`flex-1 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all duration-200 text-sm sm:text-base ${
-                    !isPricesValid() 
+                    !isPricesValid() || loadingPrices
                       ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
                       : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow-md'
                   }`}
                 >
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  Save Purchase Prices
+                  {loadingPrices ? (
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2 inline animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                  {loadingPrices ? 'Saving...' : 'Save Purchase Prices'}
                 </button>
               </div>
               {message && (
@@ -559,6 +588,13 @@ export default function Purchases() {
               </div>
             </div>
             
+            {/* Debug: Show current saving state */}
+            {saving && (
+              <div className="bg-blue-100 border border-blue-300 text-blue-800 px-4 py-2 rounded-lg mb-4">
+                🔄 Loading state is active: {saving ? 'true' : 'false'}
+              </div>
+            )}
+            
             <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-200">
               <button 
                 onClick={recordPurchase}
@@ -570,16 +606,21 @@ export default function Purchases() {
                 }`}
               >
                 {saving ? (
-                  <svg className="w-5 h-5 mr-2 inline animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
+                  <>
+                    <svg className="w-5 h-5 mr-2 inline animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Recording...
+                  </>
                 ) : (
-                  <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                  <>
+                    <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Record Purchase
+                  </>
                 )}
-                {saving ? 'Recording...' : 'Record Purchase'}
               </button>
               <button 
                 onClick={resetForms}
@@ -722,9 +763,20 @@ export default function Purchases() {
                 </button>
                 <button
                   onClick={confirmUnload}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors duration-150"
+                  disabled={saving}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-150 flex items-center gap-2 ${
+                    saving 
+                      ? 'bg-slate-400 text-white cursor-not-allowed' 
+                      : 'text-white bg-blue-600 hover:bg-blue-700'
+                  }`}
                 >
-                  Confirm Unload
+                  {saving ? (
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : null}
+                  {saving ? 'Unloading...' : 'Confirm Unload'}
                 </button>
               </div>
             </div>
