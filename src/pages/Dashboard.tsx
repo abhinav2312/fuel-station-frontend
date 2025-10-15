@@ -477,7 +477,6 @@ export default function Dashboard() {
           </div>
           <div className="premium-card-body">
             <div className="h-80">
-              {console.log('Sales trend data for chart:', data.salesTrend)}
               {data.salesTrend && data.salesTrend.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={data.salesTrend}>
