@@ -120,9 +120,6 @@ export default function Purchases() {
       showMessage('Please select at least one tank', 'error');
       return;
     }
-    
-    try {
-      setSaving(true);
 
     // Check if all selected tanks have quantities
     const missingQuantities = selectedTanks.filter(tankId => !tankQuantities[tankId] || tankQuantities[tankId] <= 0);
@@ -137,8 +134,9 @@ export default function Purchases() {
       showMessage('Please set purchase prices for all selected tanks', 'error');
       return;
     }
-
+    
     try {
+      setSaving(true);
       const promises = selectedTanks.map(tankId => {
         const unitCost = purchasePrices[tankId];
         const litres = tankQuantities[tankId];
