@@ -500,12 +500,11 @@ export default function Clients() {
                   label="Litres" 
                   type="number" 
                   step="0.01"
+                  min="0"
                   value={litres || ''} 
                   onChange={e => {
                     const value = e.target.value;
-                    if (value === '' || (!isNaN(Number(value)) && Number(value) >= 0)) {
-                      setLitres(value === '' ? 0 : Number(value));
-                    }
+                    setLitres(value === '' ? 0 : Number(value));
                   }} 
                 />
               ) : (
@@ -513,12 +512,11 @@ export default function Clients() {
                   label="Money Amount" 
                   type="number" 
                   step="0.01"
+                  min="0"
                   value={moneyAmount || ''} 
                   onChange={e => {
                     const value = e.target.value;
-                    if (value === '' || (!isNaN(Number(value)) && Number(value) >= 0)) {
-                      setMoneyAmount(value === '' ? 0 : Number(value));
-                    }
+                    setMoneyAmount(value === '' ? 0 : Number(value));
                   }} 
                 />
               )}

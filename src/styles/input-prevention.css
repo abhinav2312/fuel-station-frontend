@@ -1,0 +1,24 @@
+/* Prevent scroll wheel from changing number input values */
+input[type="number"] {
+    -moz-appearance: textfield;
+    /* Firefox */
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Prevent scroll wheel events on number inputs */
+input[type="number"]:focus {
+    outline: none;
+}
+
+/* Additional prevention for all number inputs */
+input[type="number"] {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}

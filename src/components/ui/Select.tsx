@@ -6,7 +6,11 @@ const Select = forwardRef<HTMLSelectElement, Props>(function Select({ label, cla
   return (
     <label className="block">
       {label && <span className="block text-xs mb-1 text-gray-600">{label}</span>}
-      <select ref={ref} className={`border rounded-lg w-full p-3 focus:ring-2 focus:ring-blue-500 ${className}`} {...rest}>
+      <select 
+        ref={ref} 
+        className={`border rounded-lg w-full p-3 focus:ring-2 focus:ring-blue-500 text-sm sm:text-base min-h-[44px] ${className}`} 
+        {...rest}
+      >
         {children}
       </select>
     </label>

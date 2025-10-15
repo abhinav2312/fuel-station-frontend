@@ -76,7 +76,7 @@ export default function Prices() {
     <div className="space-y-8">
       {/* Premium Header */}
       <div className="premium-card">
-        <div className="premium-card-header">
+        <div className="premium-card-header p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="premium-heading-1 premium-gradient-text">Fuel Price Management</h1>
@@ -98,7 +98,7 @@ export default function Prices() {
 
       {/* Premium Tabs */}
       <div className="premium-card">
-        <div className="premium-card-body">
+        <div className="premium-card-body p-4 sm:p-6">
           <div className="flex space-x-1 mb-8 bg-slate-100 p-1 rounded-xl">
             <button
               onClick={() => setActiveTab('set')}
@@ -171,11 +171,11 @@ export default function Prices() {
             </div>
           </div>
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm max-w-4xl">
-            <div className="px-6 py-5 border-b border-slate-200">
+            <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-200">
               <h2 className="text-xl font-semibold text-slate-900">Set New Prices</h2>
               <p className="text-sm text-slate-600 mt-1">Update fuel prices for your station</p>
             </div>
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 {fuelTypes.map(fuelType => {
                   const key = fuelType.name.toLowerCase().replace(/\s+/g, '');
@@ -187,11 +187,17 @@ export default function Prices() {
                       <input
                         type="number"
                         step="0.01"
+                        min="0"
                         value={prices[key] ?? ''}
                         onChange={e => setPrices(prev => ({
                           ...prev,
                           [key]: e.target.value === '' ? undefined : Number(e.target.value)
                         }))}
+                        onKeyDown={e => {
+                          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                            e.preventDefault();
+                          }
+                        }}
                         className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                         placeholder={`Enter ${fuelType.name.toLowerCase()} price`}
                       />
@@ -234,7 +240,7 @@ export default function Prices() {
 
       {activeTab === 'history' && (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="px-6 py-5 border-b border-slate-200 bg-slate-50">
+          <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-200 bg-slate-50">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h2 className="text-xl font-semibold text-slate-900">Price History</h2>

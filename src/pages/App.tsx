@@ -1,5 +1,6 @@
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { PremiumCard, PremiumCardHeader, PremiumCardBody } from '../components/premium';
+import { useScrollPrevention } from '../hooks/useScrollPrevention';
 
 // Premium Branding Component
 function PremiumBranding() {
@@ -139,6 +140,9 @@ const navigation = [
 ];
 
 export default function App() {
+  // Prevent scroll wheel from changing number input values
+  useScrollPrevention();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Premium Header */}

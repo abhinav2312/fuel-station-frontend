@@ -45,23 +45,122 @@ type DashboardData = {
 export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [dateRange, setDateRange] = useState<'today' | 'week' | 'month' | 'year'>('today');
+  const [dateRange, setDateRange] = useState<'today' | 'thisWeek' | 'thisMonth' | 'last6Months' | 'thisYear' | 'custom'>('today');
+  const [customStartDate, setCustomStartDate] = useState<string>(getToday());
+  const [customEndDate, setCustomEndDate] = useState<string>(getToday());
+  const [graphTimePeriod, setGraphTimePeriod] = useState<'today' | '1w' | '1m' | '6m' | '1yr'>('today');
+  const [userChangedGraphPeriod, setUserChangedGraphPeriod] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
-  }, [dateRange]);
+  }, [dateRange, customStartDate, customEndDate]);
+
+  // Load graph data when graph time period changes
+  useEffect(() => {
+    loadGraphData();
+  }, [graphTimePeriod]);
+
+  // Sync graph time period with page period (only if user hasn't manually changed it)
+  useEffect(() => {
+    if (!userChangedGraphPeriod) {
+      if (dateRange === 'today') {
+        setGraphTimePeriod('today'); // Show today's data for today
+      } else if (dateRange === 'thisWeek') {
+        setGraphTimePeriod('1w');
+      } else if (dateRange === 'thisMonth') {
+        setGraphTimePeriod('1m');
+      } else if (dateRange === 'last6Months') {
+        setGraphTimePeriod('6m');
+      } else if (dateRange === 'thisYear') {
+        setGraphTimePeriod('1yr');
+      }
+      // Don't sync for 'custom' - let user control graph period independently
+    }
+  }, [dateRange, userChangedGraphPeriod]);
+
+  function handleGraphPeriodChange(period: 'today' | '1w' | '1m' | '6m' | '1yr') {
+    setGraphTimePeriod(period);
+    setUserChangedGraphPeriod(true);
+  }
+
+  async function loadGraphData() {
+    try {
+      console.log('Loading graph data for period:', graphTimePeriod);
+      
+      // Build graph parameters
+      const graphParams: any = { period: graphTimePeriod };
+      
+      console.log('Making API calls with params:', graphParams);
+      
+      const [salesTrendResponse, reportsResponse] = await Promise.all([
+        apiClient.get('/api/reports/trends', { params: graphParams }),
+        apiClient.get('/api/reports/summary', { params: graphParams })
+      ]);
+      
+      const salesTrend = salesTrendResponse.data || [];
+      const reports = reportsResponse.data;
+      
+      console.log('Sales trend data for chart:', salesTrend);
+      console.log('Graph data loaded:', { salesTrend, reports });
+      console.log('Fuel types from reports:', reports.fuelTypes);
+      
+      // Update both sales trend and fuel type sales data
+      setData(prevData => {
+        if (!prevData) return null;
+        
+        console.log('Raw fuelTypes data:', reports.fuelTypes);
+        
+        const fuelTypeSales = reports.fuelTypes
+          ?.map((fuelType: any) => {
+            console.log('Processing fuel type:', fuelType);
+            return {
+              name: fuelType.name,
+              value: fuelType.revenue || fuelType.litres || 0, // Use revenue or litres as fallback
+              color: fuelType.name.toLowerCase().includes('petrol') ? '#3B82F6' : 
+                     fuelType.name.toLowerCase().includes('diesel') ? '#10B981' : '#8B5CF6'
+            };
+          })
+          ?.filter((item: any) => item.value > 0) || []; // Filter after mapping
+        
+        console.log('Processed fuelTypeSales:', fuelTypeSales);
+        
+        const newData = {
+          ...prevData,
+          salesTrend: salesTrend,
+          fuelTypeSales: fuelTypeSales
+        };
+        
+        console.log('Setting new data with salesTrend:', salesTrend);
+        console.log('New data object:', newData);
+        
+        return newData;
+      });
+    } catch (error) {
+      console.error('Error loading graph data:', error);
+    }
+  }
 
   async function loadDashboardData() {
     try {
       setLoading(true);
       console.log('Loading dashboard data for period:', dateRange);
       
+      // Build API parameters based on date range
+      const params: any = { period: dateRange };
+      if (dateRange === 'custom') {
+        params.startDate = customStartDate;
+        params.endDate = customEndDate;
+      }
+      
+      // Build graph parameters (separate from page data)
+      const graphParams: any = { period: graphTimePeriod };
+      
       const [salesResponse, clientsResponse, creditsResponse, tanksResponse, salesTrendResponse] = await Promise.all([
-        apiClient.get(`/api/reports/summary?period=${dateRange}`),
+        apiClient.get('/api/reports/summary', { params }),
         apiClient.get('/api/clients'),
         apiClient.get('/api/credits'),
         apiClient.get('/api/tanks'),
-        apiClient.get(`/api/reports/trends?period=${dateRange}`) // New endpoint for trend data
+        apiClient.get('/api/reports/trends', { params: graphParams }) // Use graph time period for trends
       ]);
 
       const sales = salesResponse.data;
@@ -75,7 +174,9 @@ export default function Dashboard() {
         clients: clients.length,
         credits: credits.length,
         tanks: tanks.length,
-        salesTrend: salesTrend.length
+        salesTrend: salesTrend.length,
+        graphTimePeriod,
+        salesTrendData: salesTrend
       });
 
       // Calculate metrics
@@ -109,13 +210,25 @@ export default function Dashboard() {
       const lowStockTanks = tankLevels.filter(tank => tank.percentage < 20);
 
       // Use real fuel type sales data from the sales response
-      const fuelTypeSales = sales.fuelTypes?.map((fuelType: any, index: number) => ({
-        name: fuelType.name,
-        value: fuelType.revenue || 0,
-        color: ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'][index % 5]
-      })) || [];
+      console.log('Sales response:', sales);
+      console.log('Fuel types from sales:', sales.fuelTypes);
+      
+      console.log('Raw sales fuelTypes data:', sales.fuelTypes);
+      
+      const fuelTypeSales = sales.fuelTypes
+        ?.map((fuelType: any, index: number) => {
+          console.log('Processing initial fuel type:', fuelType);
+          return {
+            name: fuelType.name,
+            value: fuelType.revenue || fuelType.litres || 0, // Use revenue or litres as fallback
+            color: ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'][index % 5]
+          };
+        })
+        ?.filter((item: any) => item.value > 0) || []; // Filter after mapping
+      
+      console.log('Processed fuelTypeSales for initial load:', fuelTypeSales);
 
-      setData({
+      setData(prevData => ({
         todaySales,
         todayProfit,
         totalClients,
@@ -124,9 +237,9 @@ export default function Dashboard() {
         tankLevels,
         recentSales: [],
         lowStockTanks,
-        salesTrend,
-        fuelTypeSales
-      });
+        salesTrend: prevData?.salesTrend || salesTrend, // Preserve existing salesTrend from loadGraphData
+        fuelTypeSales: prevData?.fuelTypeSales || fuelTypeSales // Preserve existing fuelTypeSales from loadGraphData
+      }));
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
@@ -181,19 +294,45 @@ export default function Dashboard() {
                 Comprehensive business analytics and real-time insights
               </p>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <span className="premium-text-small text-slate-600">Period:</span>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                <span className="premium-text-small text-slate-600 text-sm">Period:</span>
                 <select 
                   value={dateRange} 
                   onChange={(e) => setDateRange(e.target.value as any)}
-                  className="premium-select w-32"
+                  className="premium-select w-full sm:w-auto min-w-[160px] text-sm"
                 >
                   <option value="today">Today</option>
-                  <option value="week">This Week</option>
-                  <option value="month">This Month</option>
+                  <option value="thisWeek">This Week</option>
+                  <option value="thisMonth">This Month</option>
+                  <option value="last6Months">Last 6 Months</option>
+                  <option value="thisYear">This Year</option>
+                  <option value="custom">Custom Date</option>
                 </select>
               </div>
+              
+              {dateRange === 'custom' && (
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <span className="premium-text-small text-slate-600 text-sm">From:</span>
+                    <input
+                      type="date"
+                      value={customStartDate}
+                      onChange={(e) => setCustomStartDate(e.target.value)}
+                      className="premium-input w-full sm:w-auto text-sm"
+                    />
+                  </div>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <span className="premium-text-small text-slate-600 text-sm">To:</span>
+                    <input
+                      type="date"
+                      value={customEndDate}
+                      onChange={(e) => setCustomEndDate(e.target.value)}
+                      className="premium-input w-full sm:w-auto text-sm"
+                    />
+                  </div>
+                </div>
+              )}
               <button 
                 onClick={loadDashboardData}
                 disabled={loading}
@@ -275,65 +414,110 @@ export default function Dashboard() {
         {/* Sales Trend Chart */}
         <div className="premium-card">
           <div className="premium-card-header">
-            <h3 className="premium-heading-3">Sales Trend ({dateRange === 'today' ? 'Today' : dateRange === 'week' ? '7 Days' : dateRange === 'month' ? '30 Days' : '12 Months'})</h3>
-            <p className="premium-text-small text-slate-600">
-              {dateRange === 'today' ? 'Hourly' : dateRange === 'week' ? 'Daily' : dateRange === 'month' ? 'Weekly' : 'Monthly'} revenue and profit trends
-            </p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h3 className="premium-heading-3">Sales Trend</h3>
+                <p className="premium-text-small text-slate-600">
+                  Revenue and profit trends
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleGraphPeriodChange('today')}
+                  className={`px-3 py-1 text-xs rounded-lg transition-colors ${
+                    graphTimePeriod === 'today' 
+                      ? 'bg-blue-500 text-white' 
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  Today
+                </button>
+                <button
+                  onClick={() => handleGraphPeriodChange('1w')}
+                  className={`px-3 py-1 text-xs rounded-lg transition-colors ${
+                    graphTimePeriod === '1w' 
+                      ? 'bg-blue-500 text-white' 
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  1W
+                </button>
+                <button
+                  onClick={() => handleGraphPeriodChange('1m')}
+                  className={`px-3 py-1 text-xs rounded-lg transition-colors ${
+                    graphTimePeriod === '1m' 
+                      ? 'bg-blue-500 text-white' 
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  1M
+                </button>
+                <button
+                  onClick={() => handleGraphPeriodChange('6m')}
+                  className={`px-3 py-1 text-xs rounded-lg transition-colors ${
+                    graphTimePeriod === '6m' 
+                      ? 'bg-blue-500 text-white' 
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  6M
+                </button>
+                <button
+                  onClick={() => handleGraphPeriodChange('1yr')}
+                  className={`px-3 py-1 text-xs rounded-lg transition-colors ${
+                    graphTimePeriod === '1yr' 
+                      ? 'bg-blue-500 text-white' 
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  1Y
+                </button>
+              </div>
+            </div>
           </div>
           <div className="premium-card-body">
             <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={data.salesTrend}>
+              {console.log('Sales trend data for chart:', data.salesTrend)}
+              {data.salesTrend && data.salesTrend.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={data.salesTrend}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis 
-                    dataKey="date" 
-                    tickFormatter={(value) => {
-                      if (dateRange === 'today') {
-                        return value; // Show hour directly
-                      } else if (dateRange === 'week') {
-                        return new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                      } else if (dateRange === 'month') {
-                        return new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                      } else {
-                        return new Date(value).toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-                      }
-                    }}
+                    dataKey="fuelType" 
+                    tickFormatter={(value) => value}
                   />
-                  <YAxis tickFormatter={(value) => `₹${(value/1000).toFixed(0)}k`} />
+                  <YAxis tickFormatter={(value) => `${(value/1000).toFixed(0)}k`} />
                   <Tooltip 
                     formatter={(value: number, name: string) => [
-                      `₹${value.toLocaleString()}`, 
-                      name === 'sales' ? 'Revenue' : 'Profit'
+                      name === 'litres' ? `${value}L` : `₹${value.toLocaleString()}`, 
+                      name === 'litres' ? 'Litres Sold' : 'Revenue'
                     ]}
-                    labelFormatter={(label) => {
-                      if (dateRange === 'today') {
-                        return `Hour: ${label}`;
-                      } else if (dateRange === 'year') {
-                        return new Date(label).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-                      } else {
-                        return new Date(label).toLocaleDateString();
-                      }
-                    }}
+                    labelFormatter={(label) => `Fuel Type: ${label}`}
                   />
                   <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="sales" 
-                    stroke="#3B82F6" 
-                    strokeWidth={3}
-                    dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
+                  <Bar 
+                    dataKey="litres" 
+                    fill="#3B82F6" 
+                    name="Litres Sold"
+                  />
+                  <Bar 
+                    dataKey="revenue" 
+                    fill="#10B981" 
                     name="Revenue"
                   />
-                  <Line 
-                    type="monotone" 
-                    dataKey="profit" 
-                    stroke="#10B981" 
-                    strokeWidth={3}
-                    dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
-                    name="Profit"
-                  />
-                </LineChart>
+                </BarChart>
               </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <div className="text-gray-500 text-lg mb-2">No Sales Data</div>
+                    <div className="text-gray-400 text-sm">Add some readings to see sales trends</div>
+                    <div className="text-xs text-gray-400 mt-2">
+                      Debug: salesTrend length = {data.salesTrend?.length || 0}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -341,68 +525,100 @@ export default function Dashboard() {
         {/* Fuel Type Sales Distribution */}
         <div className="premium-card">
           <div className="premium-card-header">
-            <h3 className="premium-heading-3">Sales by Fuel Type</h3>
-            <p className="premium-text-small text-slate-600">Revenue distribution across fuel types</p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h3 className="premium-heading-3">Sales by Fuel Type</h3>
+                <p className="premium-text-small text-slate-600">Revenue distribution across fuel types</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleGraphPeriodChange('1w')}
+                  className={`px-3 py-1 text-xs rounded-lg transition-colors ${
+                    graphTimePeriod === '1w' 
+                      ? 'bg-blue-500 text-white' 
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  1W
+                </button>
+                <button
+                  onClick={() => handleGraphPeriodChange('1m')}
+                  className={`px-3 py-1 text-xs rounded-lg transition-colors ${
+                    graphTimePeriod === '1m' 
+                      ? 'bg-blue-500 text-white' 
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  1M
+                </button>
+                <button
+                  onClick={() => handleGraphPeriodChange('6m')}
+                  className={`px-3 py-1 text-xs rounded-lg transition-colors ${
+                    graphTimePeriod === '6m' 
+                      ? 'bg-blue-500 text-white' 
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  6M
+                </button>
+                <button
+                  onClick={() => handleGraphPeriodChange('1yr')}
+                  className={`px-3 py-1 text-xs rounded-lg transition-colors ${
+                    graphTimePeriod === '1yr' 
+                      ? 'bg-blue-500 text-white' 
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  1Y
+                </button>
+              </div>
+            </div>
           </div>
           <div className="premium-card-body">
             <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={data.fuelTypeSales}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={(props: any) => `${props.name} ${(props.percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {data.fuelTypeSales.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value: number) => `₹${value.toLocaleString()}`} />
-                </PieChart>
-              </ResponsiveContainer>
+              {data.fuelTypeSales && data.fuelTypeSales.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={data.fuelTypeSales}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={(props: any) => {
+                        if (data.fuelTypeSales.length === 1) {
+                          return `${props.name}: ₹${props.value.toLocaleString()}`;
+                        }
+                        return `${props.name} ${(props.percent * 100).toFixed(0)}%`;
+                      }}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                      startAngle={90}
+                      endAngle={450}
+                    >
+                      {data.fuelTypeSales.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value: number) => `₹${value.toLocaleString()}`} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <div className="text-gray-500 text-lg mb-2">No Data Available</div>
+                    <div className="text-gray-400 text-sm">No fuel sales data for the selected period</div>
+                    <div className="text-xs text-gray-400 mt-2">
+                      Debug: fuelTypeSales = {JSON.stringify(data.fuelTypeSales)}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Tank Levels Chart */}
-      <div className="premium-card mb-8">
-        <div className="premium-card-header">
-          <h3 className="premium-heading-3">Tank Levels Overview</h3>
-          <p className="premium-text-small text-slate-600">Current stock levels across all tanks</p>
-        </div>
-        <div className="premium-card-body">
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data.tankLevels}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis tickFormatter={(value) => `${value}%`} />
-                <Tooltip 
-                  formatter={(value: number, name: string) => [
-                    `${value}%`, 
-                    'Fill Level'
-                  ]}
-                  labelFormatter={(label, payload) => {
-                    const data = payload?.[0]?.payload;
-                    return `${data?.name} (${data?.fuelType})`;
-                  }}
-                />
-                <Bar 
-                  dataKey="percentage" 
-                  fill="#8B5CF6"
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
 
       {/* Low Stock Alert */}
       {data.lowStockTanks.length > 0 && (
@@ -440,4 +656,11 @@ export default function Dashboard() {
       )}
     </div>
   );
+}
+
+function getToday() {
+  const d = new Date();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${m}-${day}`;
 }

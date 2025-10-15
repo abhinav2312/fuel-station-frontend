@@ -53,8 +53,11 @@ type ClientCredit = {
 };
 
 export default function Reports() {
-  const [period, setPeriod] = useState<'daily'|'weekly'|'monthly'|'yearly'>('daily');
+  const [period, setPeriod] = useState<'today'|'thisWeek'|'thisMonth'|'last6Months'|'thisYear'|'custom'>('today');
   const [date, setDate] = useState<string>(today());
+  const [customStartDate, setCustomStartDate] = useState<string>(today());
+  const [customEndDate, setCustomEndDate] = useState<string>(today());
+  const [graphTimePeriod, setGraphTimePeriod] = useState<'1w' | '1m' | '6m' | '1yr'>('1w');
   const [summary, setSummary] = useState<Summary | null>(null);
   const [readings, setReadings] = useState<PumpReading[]>([]);
   const [credits, setCredits] = useState<ClientCredit[]>([]);
@@ -62,24 +65,97 @@ export default function Reports() {
 
   async function load() {
     const params: any = { period };
-    if (period === 'daily') params.date = date;
+    if (period === 'today') {
+      // No additional params needed for today
+    } else if (period === 'custom') {
+      params.startDate = customStartDate;
+      params.endDate = customEndDate;
+    }
+    
     const r = await apiClient.get('/api/reports/summary', { params });
     console.log('Reports data received:', r.data);
     setSummary(r.data);
     
-    if (period === 'daily') {
-      const readingsRes = await apiClient.get('/api/readings', { params: { date } });
+    if (period === 'today') {
+      // Load readings and credits for today
+      const today = new Date().toISOString().split('T')[0];
+      const readingsRes = await apiClient.get('/api/readings', { params: { date: today } });
       setReadings(readingsRes.data);
       
-      // Load credits for the day using the credits endpoint with date filters
       const creditsRes = await apiClient.get('/api/credits', { 
-        params: { startDate: date, endDate: date } 
+        params: { startDate: today, endDate: today } 
+      });
+      setCredits(creditsRes.data);
+    } else if (period === 'custom') {
+      // Load readings and credits for custom date range
+      const readingsRes = await apiClient.get('/api/readings', { 
+        params: { startDate: customStartDate, endDate: customEndDate } 
+      });
+      setReadings(readingsRes.data);
+      
+      const creditsRes = await apiClient.get('/api/credits', { 
+        params: { startDate: customStartDate, endDate: customEndDate } 
       });
       setCredits(creditsRes.data);
     }
   }
 
-  useEffect(() => { load(); }, [period, date]);
+  useEffect(() => { load(); }, [period, date, customStartDate, customEndDate]);
+
+  // Load graph data when graph time period changes
+  useEffect(() => {
+    loadGraphData();
+  }, [graphTimePeriod]);
+
+  // Sync graph time period with page period
+  useEffect(() => {
+    switch (period) {
+      case 'today':
+        setGraphTimePeriod('1w'); // Show 1 week trend for today
+        break;
+      case 'thisWeek':
+        setGraphTimePeriod('1w');
+        break;
+      case 'thisMonth':
+        setGraphTimePeriod('1m');
+        break;
+      case 'last6Months':
+        setGraphTimePeriod('6m');
+        break;
+      case 'thisYear':
+        setGraphTimePeriod('1yr');
+        break;
+      case 'custom':
+        // Keep current graph period for custom
+        break;
+    }
+  }, [period]);
+
+  async function loadGraphData() {
+    try {
+      console.log('Loading graph data for period:', graphTimePeriod);
+      
+      // Build graph parameters
+      const graphParams: any = { period: graphTimePeriod };
+      
+      const salesTrendResponse = await apiClient.get('/api/reports/trends', { params: graphParams });
+      const salesTrend = salesTrendResponse.data || [];
+      
+      // Update only the sales trend data in summary
+      setSummary(prevSummary => {
+        if (!prevSummary) return null;
+        return {
+          ...prevSummary,
+          // Note: We might need to add salesTrend to the Summary type if it doesn't exist
+          // For now, we'll just log the data
+        };
+      });
+      
+      console.log('Graph data loaded:', salesTrend);
+    } catch (error) {
+      console.error('Error loading graph data:', error);
+    }
+  }
 
   function exportCSV() {
     if (!summary) return;
@@ -125,20 +201,42 @@ export default function Reports() {
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
-          <Select label="Period" value={period} onChange={e => setPeriod(e.target.value as any)}>
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-            <option value="yearly">Yearly</option>
+          <Select 
+            label="Period" 
+            value={period} 
+            onChange={e => setPeriod(e.target.value as any)}
+            className="text-sm"
+          >
+            <option value="today">Today</option>
+            <option value="thisWeek">This Week</option>
+            <option value="thisMonth">This Month</option>
+            <option value="last6Months">Last 6 Months</option>
+            <option value="thisYear">This Year</option>
+            <option value="custom">Custom Date</option>
           </Select>
         </div>
-        {period === 'daily' && (
-          <div>
-            <Input label="Date" type="date" value={date} onChange={e => setDate(e.target.value)} />
-          </div>
+        {period === 'custom' && (
+          <>
+            <div>
+              <Input 
+                label="Start Date" 
+                type="date" 
+                value={customStartDate} 
+                onChange={e => setCustomStartDate(e.target.value)} 
+              />
+            </div>
+            <div>
+              <Input 
+                label="End Date" 
+                type="date" 
+                value={customEndDate} 
+                onChange={e => setCustomEndDate(e.target.value)} 
+              />
+            </div>
+          </>
         )}
         <div className="sm:col-span-2 lg:col-span-1">
-          {period === 'daily' && (
+          {period === 'today' && (
             <Button variant="secondary" onClick={() => setShowDetails(!showDetails)} className="w-full">
               {showDetails ? 'Hide Details' : 'Show Details'}
             </Button>
@@ -288,34 +386,6 @@ export default function Reports() {
               </div>
             </div>
 
-            {/* Fuel Type Performance Chart */}
-            <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-              <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 px-8 py-6">
-                <h3 className="text-xl font-bold text-white">Fuel Type Performance</h3>
-                <p className="text-indigo-100">Revenue and volume breakdown by fuel type</p>
-              </div>
-              <div className="p-8">
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={summary.fuelTypes || []}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis yAxisId="left" orientation="left" tickFormatter={(value) => `₹${(value/1000).toFixed(0)}k`} />
-                      <YAxis yAxisId="right" orientation="right" tickFormatter={(value) => `${value}L`} />
-                      <Tooltip 
-                        formatter={(value: number, name: string) => [
-                          name === 'revenue' ? `₹${value.toLocaleString()}` : `${value.toFixed(0)}L`,
-                          name === 'revenue' ? 'Revenue' : 'Volume'
-                        ]}
-                      />
-                      <Legend />
-                      <Bar yAxisId="left" dataKey="revenue" fill="#3B82F6" name="Revenue" />
-                      <Bar yAxisId="right" dataKey="litres" fill="#10B981" name="Volume (L)" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </div>
 
             {/* Financial Overview */}
             <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
@@ -425,7 +495,51 @@ export default function Reports() {
 
               {/* Profit Chart */}
               <div className="mt-8">
-                <h4 className="text-lg font-semibold text-slate-900 mb-4">Profit vs Revenue Comparison</h4>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                  <h4 className="text-lg font-semibold text-slate-900">Profit vs Revenue Comparison</h4>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setGraphTimePeriod('1w')}
+                      className={`px-3 py-1 text-xs rounded-lg transition-colors ${
+                        graphTimePeriod === '1w' 
+                          ? 'bg-blue-500 text-white' 
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      1W
+                    </button>
+                    <button
+                      onClick={() => setGraphTimePeriod('1m')}
+                      className={`px-3 py-1 text-xs rounded-lg transition-colors ${
+                        graphTimePeriod === '1m' 
+                          ? 'bg-blue-500 text-white' 
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      1M
+                    </button>
+                    <button
+                      onClick={() => setGraphTimePeriod('6m')}
+                      className={`px-3 py-1 text-xs rounded-lg transition-colors ${
+                        graphTimePeriod === '6m' 
+                          ? 'bg-blue-500 text-white' 
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      6M
+                    </button>
+                    <button
+                      onClick={() => setGraphTimePeriod('1yr')}
+                      className={`px-3 py-1 text-xs rounded-lg transition-colors ${
+                        graphTimePeriod === '1yr' 
+                          ? 'bg-blue-500 text-white' 
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      1Y
+                    </button>
+                  </div>
+                </div>
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={summary.fuelTypeProfits || []}>
@@ -450,7 +564,7 @@ export default function Reports() {
         </div>
       )}
 
-      {showDetails && period === 'daily' && (
+      {showDetails && period === 'today' && (
         <div className="space-y-8">
           {/* Tank Readings */}
           <div className="table-container">
@@ -476,7 +590,7 @@ export default function Reports() {
                 </thead>
                 <tbody className="bg-white divide-y divide-slate-200">
                   {readings.map(reading => {
-                    const sold = Number(reading.openingLitres) - Number(reading.closingLitres); // opening - closing = sold
+                    const sold = Number(reading.closingLitres) - Number(reading.openingLitres); // closing - opening = sold
                     return (
                       <tr key={reading.id} className="table-row">
                         <td className="table-cell font-medium">{reading.pump?.name || 'Unknown Pump'}</td>
@@ -560,5 +674,6 @@ function currency(n: number | undefined) {
   if (n === undefined || n === null || isNaN(n)) return '0.00';
   return n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
+
 
 

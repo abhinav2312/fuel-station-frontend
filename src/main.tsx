@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import './styles.css';
 import './styles/premium.css';
+import './styles/input-prevention.css';
 
 // Initialize API configuration first
 import './utils/api';

@@ -126,6 +126,13 @@ export default function Purchases() {
       return;
     }
 
+    // Check if all selected tanks have purchase prices
+    const missingPrices = selectedTanks.filter(tankId => !purchasePrices[tankId] || purchasePrices[tankId] <= 0);
+    if (missingPrices.length > 0) {
+      showMessage('Please set purchase prices for all selected tanks', 'error');
+      return;
+    }
+
     try {
       const promises = selectedTanks.map(tankId => {
         const unitCost = purchasePrices[tankId];
@@ -213,7 +220,7 @@ export default function Purchases() {
     <div className="space-y-8">
       {/* Premium Header */}
       <div className="premium-card">
-        <div className="premium-card-header">
+        <div className="premium-card-header p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="premium-heading-1 premium-gradient-text">Fuel Purchase Management</h1>
@@ -242,11 +249,11 @@ export default function Purchases() {
       
       {/* Current Purchase Prices Display */}
       <div className="premium-card">
-        <div className="premium-card-header">
+        <div className="premium-card-header p-4 sm:p-6">
           <h2 className="premium-heading-2">Current Purchase Prices</h2>
           <p className="premium-text text-slate-600 mt-1">View current purchase prices for each fuel type</p>
         </div>
-        <div className="premium-card-body">
+        <div className="premium-card-body p-4 sm:p-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {fuelTypes.map((fuelType, index) => {
               const colors = [
@@ -257,7 +264,7 @@ export default function Purchases() {
               const color = colors[index % colors.length];
               
               return (
-                <div key={fuelType.id} className={`${color.bg} ${color.border} border rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200`}>
+                <div key={fuelType.id} className={`${color.bg} ${color.border} border rounded-xl p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow duration-200`}>
                   <div className="flex items-center mb-4">
                     <div className={`p-3 ${color.bg} rounded-lg border ${color.border}`}>
                       <svg className={`w-6 h-6 ${color.icon}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -289,67 +296,70 @@ export default function Purchases() {
 
       {/* Premium Tabs */}
       <div className="premium-card">
-        <div className="premium-card-body">
-          <div className="flex space-x-1 mb-8 bg-slate-100 p-1 rounded-xl">
+        <div className="premium-card-body p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-1 mb-6 sm:mb-8 bg-slate-100 p-1 rounded-xl">
             <button
               onClick={() => setActiveTab('record')}
-              className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all duration-200 ${
+              className={`flex-1 py-2 sm:py-3 px-3 sm:px-6 rounded-lg font-medium transition-all duration-200 text-sm sm:text-base ${
                 activeTab === 'record' 
                   ? 'bg-white text-slate-900 shadow-sm' 
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 mr-1 sm:mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
               </svg>
-              Record Purchase
+              <span className="hidden sm:inline">Record Purchase</span>
+              <span className="sm:hidden">Record</span>
             </button>
             <button
               onClick={() => setActiveTab('history')}
-              className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all duration-200 ${
+              className={`flex-1 py-2 sm:py-3 px-3 sm:px-6 rounded-lg font-medium transition-all duration-200 text-sm sm:text-base ${
                 activeTab === 'history' 
                   ? 'bg-white text-slate-900 shadow-sm' 
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 mr-1 sm:mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
-              Purchase History
+              <span className="hidden sm:inline">Purchase History</span>
+              <span className="sm:hidden">History</span>
             </button>
             <button
               onClick={() => setActiveTab('prices')}
-              className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all duration-200 ${
+              className={`flex-1 py-2 sm:py-3 px-3 sm:px-6 rounded-lg font-medium transition-all duration-200 text-sm sm:text-base ${
                 activeTab === 'prices' 
                   ? 'bg-white text-slate-900 shadow-sm' 
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 mr-1 sm:mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
               </svg>
-              Set Purchase Prices
+              <span className="hidden sm:inline">Set Purchase Prices</span>
+              <span className="sm:hidden">Prices</span>
             </button>
           </div>
 
       {/* Set Purchase Prices Tab */}
       {activeTab === 'prices' && (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm max-w-4xl">
-          <div className="px-6 py-5 border-b border-slate-200">
-            <h2 className="text-xl font-semibold text-slate-900">Set Purchase Prices</h2>
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm w-full">
+          <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-200">
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-900">Set Purchase Prices</h2>
             <p className="text-sm text-slate-600 mt-1">Configure purchase prices for each fuel type</p>
           </div>
-          <div className="p-6">
-            <div className="space-y-6">
+          <div className="p-4 sm:p-6">
+            <div className="space-y-4 sm:space-y-6">
               {fuelTypes.map(fuelType => (
-                <div key={fuelType.id} className="bg-slate-50 rounded-xl p-6 border border-slate-200">
-                  <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center">
-                    <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div key={fuelType.id} className="bg-slate-50 rounded-xl p-3 sm:p-4 border border-slate-200">
+                  <h3 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4 flex items-center">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                     </svg>
                     {fuelType?.name || 'N/A'} Purchase Price
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     {tanks
                       .filter(tank => tank.fuelType?.id === fuelType.id)
                       .map(tank => (
@@ -360,12 +370,18 @@ export default function Purchases() {
                           <input
                             type="number"
                             step="0.01"
+                            min="0"
                             value={purchasePrices[tank.id] || ''}
                             onChange={e => setPurchasePrices(prev => ({
                               ...prev,
                               [tank.id]: Number(e.target.value)
                             }))}
-                            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                            onKeyDown={e => {
+                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                e.preventDefault();
+                              }
+                            }}
+                            className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-sm sm:text-base"
                             placeholder="Enter purchase price"
                           />
                         </div>
@@ -377,13 +393,13 @@ export default function Purchases() {
                 <button
                   onClick={savePurchasePrices}
                   disabled={!isPricesValid()}
-                  className={`flex-1 px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
+                  className={`flex-1 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all duration-200 text-sm sm:text-base ${
                     !isPricesValid() 
                       ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
                       : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow-md'
                   }`}
                 >
-                  <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   Save Purchase Prices
@@ -405,17 +421,17 @@ export default function Purchases() {
 
       {/* Record Purchase Tab */}
       {activeTab === 'record' && (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm max-w-4xl">
-          <div className="px-6 py-5 border-b border-slate-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-            <h2 className="text-xl font-semibold text-slate-900">Record Purchase</h2>
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm w-full">
+          <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-900">Record Purchase</h2>
             <p className="text-sm text-slate-600 mt-1">Select tanks and enter quantities to record fuel purchases</p>
           </div>
-          <div className="p-6 space-y-6">
+          <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-4">Select Tanks</label>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <label className="block text-sm font-semibold text-slate-700 mb-3 sm:mb-4">Select Tanks</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {tanks.map(tank => (
-                  <label key={tank.id} className={`flex items-start p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                  <label key={tank.id} className={`flex items-start p-3 sm:p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
                     selectedTanks.includes(tank.id) 
                       ? 'border-blue-500 bg-blue-50 shadow-md' 
                       : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
@@ -424,15 +440,15 @@ export default function Purchases() {
                       type="checkbox"
                       checked={selectedTanks.includes(tank.id)}
                       onChange={() => toggleTankSelection(tank.id)}
-                      className="mr-3 mt-1 w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                      className="mr-2 sm:mr-3 mt-1 w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
                     />
-                    <div className="flex-1">
-                      <div className="font-semibold text-slate-900 mb-1">{tank?.name || 'N/A'}</div>
-                      <div className="text-sm text-slate-600 mb-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-slate-900 mb-1 text-sm sm:text-base truncate">{tank?.name || 'N/A'}</div>
+                      <div className="text-xs sm:text-sm text-slate-600 mb-2">
                         {tank.fuelType?.name || 'N/A'} - {tank.currentLevel || 0}L / {tank.capacityLit || 0}L
                       </div>
                       {purchasePrices[tank.id] && (
-                        <div className="text-sm font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded-md inline-block">
+                        <div className="text-xs sm:text-sm font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded-md inline-block">
                           ₹{purchasePrices[tank.id]}/L
                         </div>
                       )}
@@ -444,52 +460,57 @@ export default function Purchases() {
             
             {/* Individual quantity inputs for selected tanks */}
             {selectedTanks.length > 0 && (
-              <div className="bg-slate-50 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center">
-                  <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bg-slate-50 rounded-xl p-3 sm:p-4">
+                <h3 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4 flex items-center">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                   </svg>
                   Enter Quantities
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   {selectedTanks.map(tankId => {
                     const tank = tanks.find(t => t.id === tankId);
                     if (!tank) return null;
                     
                     return (
-                      <div key={tankId} className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
-                        <div className="flex items-center justify-between mb-3">
-                          <div>
-                            <div className="font-semibold text-slate-900">{tank?.name || 'N/A'}</div>
-                            <div className="text-sm text-slate-600">{tank.fuelType?.name || 'N/A'}</div>
+                      <div key={tankId} className="bg-white border border-slate-200 rounded-lg p-3 sm:p-4 shadow-sm">
+                        <div className="flex items-center justify-between mb-2 sm:mb-3">
+                          <div className="min-w-0 flex-1">
+                            <div className="font-semibold text-slate-900 text-sm sm:text-base truncate">{tank?.name || 'N/A'}</div>
+                            <div className="text-xs sm:text-sm text-slate-600">{tank.fuelType?.name || 'N/A'}</div>
                           </div>
                           {purchasePrices[tankId] && (
-                            <div className="text-sm font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded-md">
+                            <div className="text-xs sm:text-sm font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded-md ml-2">
                               ₹{purchasePrices[tankId]}/L
                             </div>
                           )}
                         </div>
-                        <div className="flex items-center gap-3">
-                          <label className="text-sm font-medium text-slate-700 min-w-[60px]">Litres:</label>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={tankQuantities[tankId] || ''}
-                            onChange={e => {
-                              const value = e.target.value;
-                              if (value === '' || (!isNaN(Number(value)) && Number(value) >= 0)) {
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+                          <label className="text-xs sm:text-sm font-medium text-slate-700 sm:min-w-[60px]">Litres:</label>
+                          <div className="flex-1 w-full">
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={tankQuantities[tankId] || ''}
+                              onChange={e => {
+                                const value = e.target.value;
                                 setTankQuantities(prev => ({
                                   ...prev,
                                   [tankId]: value === '' ? 0 : Number(value)
                                 }));
-                              }
-                            }}
-                            className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                            placeholder="Enter litres"
-                          />
+                              }}
+                              onKeyDown={e => {
+                                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                  e.preventDefault();
+                                }
+                              }}
+                              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-sm sm:text-base"
+                              placeholder="Enter litres"
+                            />
+                          </div>
                           {purchasePrices[tankId] && tankQuantities[tankId] > 0 && (
-                            <div className="text-sm font-semibold text-green-600 bg-green-100 px-3 py-2 rounded-lg">
+                            <div className="text-xs sm:text-sm font-semibold text-green-600 bg-green-100 px-2 sm:px-3 py-1 sm:py-2 rounded-lg w-full sm:w-auto text-center">
                               ₹{((purchasePrices[tankId] || 0) * (tankQuantities[tankId] || 0)).toFixed(2)}
                             </div>
                           )}
@@ -573,49 +594,49 @@ export default function Purchases() {
 
       {/* Purchase History Tab */}
       {activeTab === 'history' && (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="px-6 py-5 border-b border-slate-200 bg-slate-50">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden w-full">
+          <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-200 bg-slate-50">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-xl font-semibold text-slate-900">Purchase History</h2>
+                <h2 className="text-lg sm:text-xl font-semibold text-slate-900">Purchase History</h2>
                 <p className="text-sm text-slate-600 mt-1">Track all fuel purchase transactions</p>
               </div>
             </div>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[600px]">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Tank</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Fuel Type</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Litres</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Unit Cost</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Total Cost</th>
+                  <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Date</th>
+                  <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Tank</th>
+                  <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Fuel Type</th>
+                  <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Litres</th>
+                  <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Unit Cost</th>
+                  <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Total Cost</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-slate-200">
                 {purchases.map(purchase => (
                   <tr key={purchase.id} className="hover:bg-slate-50 transition-colors duration-150">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-slate-600">
                       {purchase.date ? new Date(purchase.date).toLocaleDateString() : 'N/A'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-slate-900">
                       {purchase.tank?.name || 'N/A'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-slate-900">
                       {purchase.tank?.fuelType?.name || 'N/A'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-slate-900">
                       {purchase.litres || 0}L
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-slate-900">
                       ₹{purchase.unitCost || 0}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-bold text-slate-900">
                       ₹{purchase.totalCost || 0}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         (purchase.status || 'pending') === 'unloaded' 
                           ? 'bg-green-100 text-green-800' 

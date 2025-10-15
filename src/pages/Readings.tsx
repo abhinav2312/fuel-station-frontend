@@ -300,6 +300,7 @@ export default function Readings() {
                                 label="Opening (L)" 
                                 type="number" 
                                 step="0.01"
+                                min="0"
                                 value={readings[pump.id]?.openingLitres ?? ''} 
                                 onChange={e => {
                                   const value = e.target.value === '' ? undefined : Number(e.target.value);
@@ -310,6 +311,7 @@ export default function Readings() {
                                 label="Closing (L)" 
                                 type="number" 
                                 step="0.01"
+                                min="0"
                                 value={readings[pump.id]?.closingLitres ?? ''} 
                                 onChange={e => {
                                   const value = e.target.value === '' ? undefined : Number(e.target.value);
@@ -328,7 +330,7 @@ export default function Readings() {
                                   {(() => {
                                     const opening = readings[pump.id]?.openingLitres || 0;
                                     const closing = readings[pump.id]?.closingLitres || 0;
-                                    const sold = opening - closing;
+                                    const sold = closing - opening;
                                     return sold.toFixed(2);
                                   })()}
                                 </div>
@@ -401,7 +403,7 @@ export default function Readings() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {history.map(reading => {
-                  const sold = Number(reading.openingLitres) - Number(reading.closingLitres);
+                  const sold = Number(reading.closingLitres) - Number(reading.openingLitres);
                   const revenue = sold * Number(reading.pricePerLitre);
                   return (
                     <tr key={reading.id} className="hover:bg-gray-50">
