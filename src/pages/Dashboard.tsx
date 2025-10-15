@@ -111,20 +111,31 @@ export default function Dashboard() {
         if (!prevData) return null;
         
         console.log('Raw fuelTypes data:', reports.fuelTypes);
+        console.log('Graph loading - fuelTypes structure:', {
+          hasFuelTypes: !!reports.fuelTypes,
+          fuelTypesLength: reports.fuelTypes?.length || 0,
+          fuelTypesData: reports.fuelTypes
+        });
         
         const fuelTypeSales = reports.fuelTypes
           ?.map((fuelType: any) => {
             console.log('Processing fuel type:', fuelType);
+            const value = fuelType.revenue || fuelType.litres || 0;
+            console.log(`Graph fuel type ${fuelType.name}: revenue=${fuelType.revenue}, litres=${fuelType.litres}, finalValue=${value}`);
             return {
               name: fuelType.name,
-              value: fuelType.revenue || fuelType.litres || 0, // Use revenue or litres as fallback
+              value: value, // Use revenue or litres as fallback
               color: fuelType.name.toLowerCase().includes('petrol') ? '#3B82F6' : 
                      fuelType.name.toLowerCase().includes('diesel') ? '#10B981' : '#8B5CF6'
             };
           })
-          ?.filter((item: any) => item.value >= 0) || []; // Show all items, including zero values
+          ?.filter((item: any) => {
+            console.log(`Graph filtering item ${item.name}: value=${item.value}, will include=${item.value >= 0}`);
+            return item.value >= 0; // Show all items, including zero values
+          }) || []; 
         
         console.log('Processed fuelTypeSales:', fuelTypeSales);
+        console.log('Graph fuelTypeSales length:', fuelTypeSales.length);
         
         const newData = {
           ...prevData,
@@ -223,19 +234,30 @@ export default function Dashboard() {
       console.log('Fuel types from sales:', sales.fuelTypes);
       
       console.log('Raw sales fuelTypes data:', sales.fuelTypes);
+      console.log('Sales response structure:', {
+        hasFuelTypes: !!sales.fuelTypes,
+        fuelTypesLength: sales.fuelTypes?.length || 0,
+        fuelTypesData: sales.fuelTypes
+      });
       
       const fuelTypeSales = sales.fuelTypes
         ?.map((fuelType: any, index: number) => {
           console.log('Processing initial fuel type:', fuelType);
+          const value = fuelType.revenue || fuelType.litres || 0;
+          console.log(`Fuel type ${fuelType.name}: revenue=${fuelType.revenue}, litres=${fuelType.litres}, finalValue=${value}`);
           return {
             name: fuelType.name,
-            value: fuelType.revenue || fuelType.litres || 0, // Use revenue or litres as fallback
+            value: value, // Use revenue or litres as fallback
             color: ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'][index % 5]
           };
         })
-        ?.filter((item: any) => item.value >= 0) || []; // Show all items, including zero values
+        ?.filter((item: any) => {
+          console.log(`Filtering item ${item.name}: value=${item.value}, will include=${item.value >= 0}`);
+          return item.value >= 0; // Show all items, including zero values
+        }) || []; 
       
       console.log('Processed fuelTypeSales for initial load:', fuelTypeSales);
+      console.log('Final fuelTypeSales length:', fuelTypeSales.length);
 
       setData(prevData => ({
         todaySales,
@@ -623,8 +645,11 @@ export default function Dashboard() {
                   <div className="text-center">
                     <div className="text-gray-500 text-lg mb-2">No Data Available</div>
                     <div className="text-gray-400 text-sm">No fuel sales data for the selected period</div>
-                    <div className="text-xs text-gray-400 mt-2">
-                      Debug: fuelTypeSales = {JSON.stringify(data.fuelTypeSales)}
+                    <div className="text-xs text-gray-400 mt-2 space-y-1">
+                      <div>Debug: fuelTypeSales length = {data.fuelTypeSales?.length || 0}</div>
+                      <div>Debug: fuelTypeSales = {JSON.stringify(data.fuelTypeSales)}</div>
+                      <div>Debug: graphTimePeriod = {graphTimePeriod}</div>
+                      <div>Debug: Check browser console for detailed logs</div>
                     </div>
                   </div>
                 </div>
