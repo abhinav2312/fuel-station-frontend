@@ -152,6 +152,8 @@ export default function Dashboard() {
         params.endDate = customEndDate;
       }
       
+      console.log('Dashboard API params:', params);
+      
       // Build graph parameters (separate from page data)
       const graphParams: any = { period: graphTimePeriod };
       
@@ -168,6 +170,9 @@ export default function Dashboard() {
       const credits = creditsResponse.data;
       const tanks = tanksResponse.data;
       const salesTrend = salesTrendResponse.data || [];
+      
+      console.log('Sales response data:', sales);
+      console.log('Sales trend response data:', salesTrend);
 
       console.log('Dashboard data loaded:', {
         sales: sales.totals,
