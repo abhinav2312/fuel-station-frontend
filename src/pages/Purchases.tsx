@@ -106,11 +106,7 @@ export default function Purchases() {
   }
 
   async function savePurchasePrices() {
-    console.log('savePurchasePrices called, loadingPrices state:', loadingPrices);
-    
-    // Set loading state immediately
     setLoadingPrices(true);
-    console.log('Loading prices state set to true');
     
     try {
       await apiClient.post('/api/purchase-prices', { prices: purchasePrices });
@@ -124,11 +120,7 @@ export default function Purchases() {
   }
 
   async function recordPurchase() {
-    console.log('recordPurchase called, saving state:', saving);
-    
-    // Set loading state immediately
     setSaving(true);
-    console.log('Loading state set to true');
     
     try {
       if (selectedTanks.length === 0) {
@@ -409,13 +401,6 @@ export default function Purchases() {
                   </div>
                 </div>
               ))}
-              {/* Debug: Show current loadingPrices state */}
-              {loadingPrices && (
-                <div className="bg-green-100 border border-green-300 text-green-800 px-4 py-2 rounded-lg mb-4">
-                  🔄 Prices loading state is active: {loadingPrices ? 'true' : 'false'}
-                </div>
-              )}
-              
               <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-200">
                 <button
                   onClick={savePurchasePrices}
@@ -587,13 +572,6 @@ export default function Purchases() {
                 />
               </div>
             </div>
-            
-            {/* Debug: Show current saving state */}
-            {saving && (
-              <div className="bg-blue-100 border border-blue-300 text-blue-800 px-4 py-2 rounded-lg mb-4">
-                🔄 Loading state is active: {saving ? 'true' : 'false'}
-              </div>
-            )}
             
             <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-200">
               <button 
